@@ -2,6 +2,7 @@
 #include "pso.hpp"
 
 #include <cstdint>
+#include <chrono>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -11,7 +12,7 @@ int main(int argc, char** argv) {
     if (argc < 2) {
         std::cerr << "Usage: jsp_pso <instance> [--time S] [--seed N] "
                      "[--out DIR] [--threads N] [--decoder semi|gt] "
-                     "[--no-ls] [--no-pso] [--log FILE]\n";
+                     "[--no-ls] [--no-pso] [--target M] [--log FILE]\n";
         return 2;
     }
     try {
@@ -27,6 +28,11 @@ int main(int argc, char** argv) {
             };
             if (argument == "--time") {
                 options.seconds = std::stod(next());
+                if (options.seconds < 0.0) {
+                    throw std::runtime_error("--time doit etre positif ou nul");
+                }
+            } else if (argument == "--target") {
+                options.target_makespan = std::stoi(next());
             } else if (argument == "--seed") {
                 options.seed = std::stoull(next());
             } else if (argument == "--out") {
@@ -54,13 +60,17 @@ int main(int argc, char** argv) {
                 throw std::runtime_error("Option inconnue: " + argument);
             }
         }
-        if (options.seconds <= 0.0 || options.threads <= 0 ||
+        if (options.threads <= 0 ||
             options.particles <= 0) {
             throw std::runtime_error("Les parametres numeriques doivent etre positifs");
         }
         const Instance instance = read_instance(input);
+        const auto started = std::chrono::steady_clock::now();
         const Schedule schedule = solve(instance, options);
-        std::cout << "makespan=" << schedule.makespan << '\n';
+        const double elapsed = std::chrono::duration<double>(
+            std::chrono::steady_clock::now() - started).count();
+        std::cout << "makespan=" << schedule.makespan
+                  << " temps_secondes=" << elapsed << '\n';
     } catch (const std::exception& error) {
         std::cerr << "Erreur: " << error.what() << '\n';
         return 1;

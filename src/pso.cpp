@@ -224,8 +224,10 @@ Schedule solve(const Instance& instance, const SolverOptions& options) {
 
         // Mise a jour PSO : inertie, attraction vers le meilleur personnel
         // puis attraction vers le meilleur global.
+        int pso_round = 0;
         while (options.use_pso && Clock::now() < deadline &&
                !target_reached.load()) {
+            ++pso_round;
             const double elapsed =
                 std::chrono::duration<double>(Clock::now() - start).count();
             const double ratio = options.seconds == 0.0
@@ -288,6 +290,38 @@ Schedule solve(const Instance& instance, const SolverOptions& options) {
                         if (options.target_makespan > 0 &&
                             global_best.makespan <= options.target_makespan) {
                             target_reached.store(true);
+                        }
+                    }
+                    // Une recherche longue sur le meilleur global évite que le PSO
+                    // reste bloque dans un voisinage deja explore.
+                    if (options.use_local_search && pso_round % 8 == 0 &&
+                        !target_reached.load()) {
+                        Schedule snapshot;
+                        {
+                            std::lock_guard<std::mutex> lock(best_mutex);
+                            snapshot = global_best;
+                        }
+                        const Schedule refined = tabu_improve(
+                            instance, snapshot, random, deadline, 160);
+                        std::lock_guard<std::mutex> lock(best_mutex);
+                        if (!refined.jobs.empty() &&
+                            refined.makespan < global_best.makespan) {
+                            global_best = refined;
+                            local_best = refined;
+                            global_position = keys_from_schedule(
+                                instance, refined, random);
+                            const auto elapsed = std::chrono::duration_cast<
+                                std::chrono::milliseconds>(
+                                Clock::now() - start).count();
+                            std::cout << "[progression] temps_ms=" << elapsed
+                                      << " makespan=" << global_best.makespan
+                                      << " thread=" << worker_id << std::endl;
+                            write_if_due(instance, global_best, options, start,
+                                         last_write, false);
+                            if (options.target_makespan > 0 &&
+                                global_best.makespan <= options.target_makespan) {
+                                target_reached.store(true);
+                            }
                         }
                     }
                 }

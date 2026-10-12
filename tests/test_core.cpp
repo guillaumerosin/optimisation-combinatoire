@@ -1,8 +1,11 @@
 #include "instance.hpp"
 #include "schedule.hpp"
+#include "local_search.hpp"
 
 #include <cassert>
+#include <chrono>
 #include <fstream>
+#include <random>
 #include <string>
 
 int main() {
@@ -19,6 +22,12 @@ int main() {
     const std::vector<int> sequence = {1, 0, 2, 2, 0, 1, 1, 2, 0};
     const Schedule schedule = decode_semi_active(instance, sequence);
     assert(schedule.makespan == 11);
+    const auto deadline = std::chrono::steady_clock::now() +
+                          std::chrono::seconds(1);
+    std::mt19937_64 random(1);
+    const Schedule improved = tabu_improve(
+        instance, schedule, random, deadline, 10);
+    assert(improved.makespan <= schedule.makespan);
     write_schedule_json(schedule, instance, "test_result.json");
     {
         std::ofstream unnamed("unnamed_instance.txt");

@@ -2,59 +2,197 @@
 
 #include <algorithm>
 #include <limits>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace {
-std::vector<int> sequence_from_schedule(const Instance& instance,
-                                         const Schedule& schedule) {
-    std::vector<std::pair<int, int>> ordered;
-    for (int job = 0; job < instance.jobs; ++job) {
-        for (int operation = 0; operation < instance.machines; ++operation) {
-            ordered.emplace_back(
-                schedule.jobs[job][operation].start, job);
+struct Node {
+    int job;
+    int operation;
+};
+
+int id(const Instance& instance, Node node) {
+    return node.job * instance.machines + node.operation;
+}
+
+Schedule rebuild(const Instance& instance,
+                 const std::vector<std::vector<Node>>& machine_order) {
+    const int total = instance.jobs * instance.machines;
+    std::vector<int> job_done(instance.jobs, 0);
+    std::vector<int> machine_done(instance.machines, 0);
+    std::vector<int> machine_position(instance.machines, 0);
+    std::vector<bool> done(static_cast<std::size_t>(total), false);
+    Schedule result;
+    result.jobs.assign(static_cast<std::size_t>(instance.jobs), {});
+    for (int count = 0; count < total; ++count) {
+        int chosen_machine = -1;
+        int chosen_position = std::numeric_limits<int>::max();
+        for (int machine = 0; machine < instance.machines; ++machine) {
+            const int position = machine_position[machine];
+            if (position >= static_cast<int>(machine_order[machine].size())) {
+                continue;
+            }
+            const Node node = machine_order[machine][position];
+            if (node.operation == job_done[node.job] &&
+                position < chosen_position) {
+                chosen_machine = machine;
+                chosen_position = position;
+            }
+        }
+        if (chosen_machine < 0) {
+            return {};
+        }
+        const Node node = machine_order[chosen_machine][chosen_position];
+        const auto& task = instance.operations[node.job][node.operation];
+        const int start = std::max(job_done[node.job],
+                                   machine_done[chosen_machine]);
+        const int end = start + task.duration;
+        result.jobs[node.job].push_back({task.machine, start, end});
+        result.makespan = std::max(result.makespan, end);
+        job_done[node.job] = end;
+        machine_done[chosen_machine] = end;
+        machine_position[chosen_machine]++;
+        done[id(instance, node)] = true;
+    }
+    for (const auto& operations : result.jobs) {
+        if (static_cast<int>(operations.size()) != instance.machines) {
+            return {};
         }
     }
-    std::stable_sort(ordered.begin(), ordered.end());
-    std::vector<int> sequence;
-    for (const auto& item : ordered) {
-        sequence.push_back(item.second);
+    return result;
+}
+
+std::vector<std::vector<Node>> machine_order(const Instance& instance,
+                                             const Schedule& schedule) {
+    std::vector<std::vector<Node>> result(
+        static_cast<std::size_t>(instance.machines));
+    for (int job = 0; job < instance.jobs; ++job) {
+        for (int operation = 0; operation < instance.machines; ++operation) {
+            result[schedule.jobs[job][operation].machine].push_back(
+                {job, operation});
+        }
     }
-    return sequence;
+    for (auto& order : result) {
+        std::stable_sort(order.begin(), order.end(),
+            [&schedule](Node left, Node right) {
+                return schedule.jobs[left.job][left.operation].start <
+                       schedule.jobs[right.job][right.operation].start;
+            });
+    }
+    return result;
+}
+
+std::vector<Node> critical_path(const Instance& instance,
+                                const Schedule& schedule) {
+    const int total = instance.jobs * instance.machines;
+    std::vector<int> distance(static_cast<std::size_t>(total), 0);
+    std::vector<int> predecessor(static_cast<std::size_t>(total), -1);
+    auto consider = [&](Node node, Node previous) {
+        const int node_id = id(instance, node);
+        const int previous_id = id(instance, previous);
+        const int length = distance[previous_id] +
+            instance.operations[node.job][node.operation].duration;
+        if (length > distance[node_id]) {
+            distance[node_id] = length;
+            predecessor[node_id] = previous_id;
+        }
+    };
+    for (int job = 0; job < instance.jobs; ++job) {
+        for (int operation = 0; operation < instance.machines; ++operation) {
+            const Node node{job, operation};
+            distance[id(instance, node)] =
+                instance.operations[job][operation].duration;
+            if (operation > 0) consider(node, {job, operation - 1});
+        }
+    }
+    const auto orders = machine_order(instance, schedule);
+    for (const auto& order : orders) {
+        for (std::size_t index = 1; index < order.size(); ++index) {
+            consider(order[index], order[index - 1]);
+        }
+    }
+    Node last{0, 0};
+    for (int job = 0; job < instance.jobs; ++job) {
+        for (int operation = 0; operation < instance.machines; ++operation) {
+            if (schedule.jobs[job][operation].end >
+                schedule.jobs[last.job][last.operation].end) {
+                last = {job, operation};
+            }
+        }
+    }
+    std::vector<Node> path;
+    int current = id(instance, last);
+    while (current >= 0) {
+        path.push_back({current / instance.machines, current % instance.machines});
+        current = predecessor[current];
+    }
+    std::reverse(path.begin(), path.end());
+    return path;
 }
 }
 
 Schedule tabu_improve(const Instance& instance, const Schedule& initial,
-                      std::mt19937_64& random,
+                      std::mt19937_64&,
                       std::chrono::steady_clock::time_point deadline,
                       int max_iterations) {
     Schedule best = initial;
-    std::vector<int> sequence = sequence_from_schedule(instance, initial);
-    std::uniform_int_distribution<int> position(0,
-        static_cast<int>(sequence.size()) - 1);
-    int stagnant = 0;
-    for (int iteration = 0; iteration < max_iterations && stagnant < 20;
-         ++iteration) {
-        if (std::chrono::steady_clock::now() >= deadline) {
-            break;
+    Schedule best_known = initial;
+    auto order = machine_order(instance, best);
+    std::unordered_map<std::string, int> tabu;
+    for (int iteration = 0; iteration < max_iterations; ++iteration) {
+        if (std::chrono::steady_clock::now() >= deadline) break;
+        const auto path = critical_path(instance, best);
+        std::vector<std::pair<int, int>> candidates;
+        for (std::size_t index = 1; index < path.size(); ++index) {
+            const Node left = path[index - 1];
+            const Node right = path[index];
+            if (best.jobs[left.job][left.operation].machine !=
+                best.jobs[right.job][right.operation].machine) {
+                continue;
+            }
+            const int machine = best.jobs[left.job][left.operation].machine;
+            auto& machine_operations = order[machine];
+            auto position = std::find_if(machine_operations.begin(),
+                machine_operations.end(), [&](Node node) {
+                    return node.job == left.job && node.operation == left.operation;
+                });
+            if (position != machine_operations.end() &&
+                position + 1 != machine_operations.end()) {
+                candidates.emplace_back(machine,
+                    static_cast<int>(position - machine_operations.begin()));
+            }
         }
-        Schedule candidate = best;
-        std::vector<int> candidate_sequence = sequence;
-        int left = position(random);
-        int right = position(random);
-        if (left == right) {
-            continue;
+        if (candidates.empty()) break;
+        Schedule iteration_best;
+        iteration_best.makespan = std::numeric_limits<int>::max();
+        std::vector<std::vector<Node>> best_order;
+        std::string best_move;
+        for (const auto& candidate : candidates) {
+            if (std::chrono::steady_clock::now() >= deadline) break;
+            auto trial_order = order;
+            auto& operations = trial_order[candidate.first];
+            std::swap(operations[candidate.second],
+                      operations[candidate.second + 1]);
+            const auto trial = rebuild(instance, trial_order);
+            if (trial.jobs.empty()) continue;
+            const std::string move = std::to_string(candidate.first) + ":" +
+                                     std::to_string(candidate.second);
+            const bool is_tabu = tabu.count(move) != 0 &&
+                                 tabu[move] > iteration;
+            if ((!is_tabu || trial.makespan < best.makespan) &&
+                trial.makespan < iteration_best.makespan) {
+                iteration_best = trial;
+                best_order = std::move(trial_order);
+                best_move = move;
+            }
         }
-        if (left > right) {
-            std::swap(left, right);
+        if (best_order.empty()) break;
+        order = std::move(best_order);
+        best = iteration_best;
+        if (best.makespan < best_known.makespan) {
+            best_known = best;
         }
-        std::swap(candidate_sequence[left], candidate_sequence[right]);
-        candidate = decode_semi_active(instance, candidate_sequence);
-        if (candidate.makespan < best.makespan) {
-            best = candidate;
-            sequence = std::move(candidate_sequence);
-            stagnant = 0;
-        } else {
-            ++stagnant;
-        }
+        tabu[best_move] = iteration + 10;
     }
-    return best;
+    return best_known;
 }

@@ -66,6 +66,47 @@ std::vector<double> keys_from_schedule(const Instance& instance,
     return keys;
 }
 
+std::vector<double> keys_from_priority(const Instance& instance, int rule) {
+    std::vector<int> next(instance.jobs, 0);
+    std::vector<int> sequence;
+    sequence.reserve(static_cast<std::size_t>(instance.jobs * instance.machines));
+    for (int step = 0; step < instance.jobs * instance.machines; ++step) {
+        int selected = -1;
+        for (int job = 0; job < instance.jobs; ++job) {
+            if (next[job] >= instance.machines) continue;
+            if (selected < 0) {
+                selected = job;
+                continue;
+            }
+            const auto remaining = [&](int candidate) {
+                int value = 0;
+                for (int operation = next[candidate];
+                     operation < instance.machines; ++operation) {
+                    value += rule == 2 ? 1 :
+                        instance.operations[candidate][operation].duration;
+                }
+                return value;
+            };
+            const int left = rule == 1 ? remaining(job) :
+                             instance.operations[job][next[job]].duration;
+            const int right = rule == 1 ? remaining(selected) :
+                              instance.operations[selected][next[selected]].duration;
+            if (left < right) selected = job;
+        }
+        sequence.push_back(selected);
+        ++next[selected];
+    }
+    std::vector<int> occurrences(instance.jobs, 0);
+    std::vector<double> keys(sequence.size());
+    for (std::size_t rank = 0; rank < sequence.size(); ++rank) {
+        const int job = sequence[rank];
+        const int operation = occurrences[job]++;
+        keys[static_cast<std::size_t>(job * instance.machines + operation)] =
+            static_cast<double>(rank) + 0.01;
+    }
+    return keys;
+}
+
 void write_if_due(const Instance& instance, const Schedule& schedule,
                   const SolverOptions& options, const Clock::time_point& start,
                   Clock::time_point& last_write, bool force) {
@@ -113,12 +154,25 @@ Schedule solve(const Instance& instance, const SolverOptions& options) {
             Particle particle;
             particle.position.resize(dimension);
             particle.velocity.resize(dimension);
-            for (int index = 0; index < dimension; ++index) {
-                particle.position[index] = unit(random);
-                particle.velocity[index] = velocity(random);
+            if (particle_index < 3) {
+                particle.position = keys_from_priority(instance, particle_index);
+                for (double& value : particle.position) value /= dimension;
+            } else {
+                for (int index = 0; index < dimension; ++index) {
+                    particle.position[index] = unit(random);
+                }
+            }
+            for (double& value : particle.velocity) {
+                value = velocity(random);
             }
             particle.best_position = particle.position;
             particle.best_schedule = decode(instance, particle.position, options);
+            if (options.use_local_search) {
+                particle.best_schedule = tabu_improve(
+                    instance, particle.best_schedule, random, deadline, 60);
+                particle.best_position = keys_from_schedule(
+                    instance, particle.best_schedule, random);
+            }
             swarm.push_back(std::move(particle));
         }
         if (swarm.empty()) {

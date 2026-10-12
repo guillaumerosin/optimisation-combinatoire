@@ -1,18 +1,18 @@
-Start testing: Oct 12 10:39 CEST
+Start testing: Oct 12 10:56 CEST
 ----------------------------------------------------------
 1/1 Testing: jsp_tests
 1/1 Test: jsp_tests
 Command: "/home/drelto/prog/optimisation-combinatoire/build/jsp_tests"
 Directory: /home/drelto/prog/optimisation-combinatoire/build
-"jsp_tests" start time: Oct 12 10:39 CEST
+"jsp_tests" start time: Oct 12 10:56 CEST
 Output:
 ----------------------------------------------------------
 <end of output>
 Test time =   0.01 sec
 ----------------------------------------------------------
 Test Passed.
-"jsp_tests" end time: Oct 12 10:39 CEST
+"jsp_tests" end time: Oct 12 10:56 CEST
 "jsp_tests" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: Oct 12 10:39 CEST
+End testing: Oct 12 10:56 CEST

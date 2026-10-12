@@ -1,0 +1,1 @@
+/usr/bin/c++ -g -fsanitize=address,undefined CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o -o jsp_tests  libjsp_core.a 

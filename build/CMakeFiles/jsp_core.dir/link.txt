@@ -1,0 +1,2 @@
+/usr/bin/ar qc libjsp_core.a CMakeFiles/jsp_core.dir/src/instance.cpp.o CMakeFiles/jsp_core.dir/src/schedule.cpp.o CMakeFiles/jsp_core.dir/src/local_search.cpp.o CMakeFiles/jsp_core.dir/src/pso.cpp.o
+/usr/bin/ranlib libjsp_core.a

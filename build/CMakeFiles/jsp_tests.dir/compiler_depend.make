@@ -146,6 +146,52 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
   /usr/include/c++/12/bits/stl_bvector.h \
   /usr/include/c++/12/bits/vector.tcc \
   /home/drelto/prog/optimisation-combinatoire/src/schedule.hpp \
+  /home/drelto/prog/optimisation-combinatoire/src/local_search.hpp \
+  /usr/include/c++/12/chrono \
+  /usr/include/c++/12/bits/chrono.h \
+  /usr/include/c++/12/ratio \
+  /usr/include/c++/12/limits \
+  /usr/include/c++/12/ctime \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/timex.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/c++/12/bits/parse_numbers.h \
+  /usr/include/c++/12/random \
+  /usr/include/c++/12/cmath \
+  /usr/include/math.h \
+  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
+  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
+  /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h \
+  /usr/include/x86_64-linux-gnu/bits/fp-logb.h \
+  /usr/include/x86_64-linux-gnu/bits/fp-fast.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h \
+  /usr/include/x86_64-linux-gnu/bits/iscanonical.h \
+  /usr/include/c++/12/bits/specfun.h \
+  /usr/include/c++/12/tr1/gamma.tcc \
+  /usr/include/c++/12/tr1/special_function_util.h \
+  /usr/include/c++/12/tr1/bessel_function.tcc \
+  /usr/include/c++/12/tr1/beta_function.tcc \
+  /usr/include/c++/12/tr1/ell_integral.tcc \
+  /usr/include/c++/12/tr1/exp_integral.tcc \
+  /usr/include/c++/12/tr1/hypergeometric.tcc \
+  /usr/include/c++/12/tr1/legendre_function.tcc \
+  /usr/include/c++/12/tr1/modified_bessel_func.tcc \
+  /usr/include/c++/12/tr1/poly_hermite.tcc \
+  /usr/include/c++/12/tr1/poly_laguerre.tcc \
+  /usr/include/c++/12/tr1/riemann_zeta.tcc \
+  /usr/include/c++/12/bits/random.h \
+  /usr/include/c++/12/bits/uniform_int_dist.h \
+  /usr/include/x86_64-linux-gnu/c++/12/bits/opt_random.h \
+  /usr/include/c++/12/bits/random.tcc \
+  /usr/include/c++/12/numeric \
+  /usr/include/c++/12/bits/stl_numeric.h \
+  /usr/include/c++/12/bit \
+  /usr/include/c++/12/pstl/glue_numeric_defs.h \
+  /usr/include/c++/12/pstl/execution_defs.h \
   /usr/include/c++/12/cassert \
   /usr/include/assert.h \
   /usr/include/c++/12/fstream \
@@ -165,11 +211,6 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
   /usr/include/x86_64-linux-gnu/bits/sched.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
   /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/timex.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
   /usr/include/x86_64-linux-gnu/bits/setjmp.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
   /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
@@ -209,19 +250,11 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 
 /usr/include/c++/12/bits/codecvt.h:
 
-/usr/include/c++/12/ostream:
-
-/usr/include/c++/12/bits/basic_ios.tcc:
-
 /usr/include/c++/12/cwctype:
 
 /usr/include/c++/12/bits/ostream.tcc:
 
 /usr/include/c++/12/bits/locale_facets.h:
-
-/usr/include/c++/12/bits/basic_ios.h:
-
-/usr/include/c++/12/bits/streambuf.tcc:
 
 /usr/include/c++/12/streambuf:
 
@@ -232,8 +265,6 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 /usr/include/x86_64-linux-gnu/sys/single_threaded.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
-
-/usr/include/x86_64-linux-gnu/bits/timex.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
 
@@ -247,8 +278,6 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 
 /usr/include/x86_64-linux-gnu/c++/12/bits/gthr-default.h:
 
-/usr/include/x86_64-linux-gnu/c++/12/bits/gthr.h:
-
 /usr/include/c++/12/bits/ios_base.h:
 
 /usr/include/c++/12/bits/nested_exception.h:
@@ -259,17 +288,77 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 
 /usr/include/c++/12/bits/exception_ptr.h:
 
-/usr/include/c++/12/exception:
-
 /usr/include/c++/12/ios:
-
-/usr/include/c++/12/fstream:
 
 /usr/include/assert.h:
 
-/usr/include/x86_64-linux-gnu/bits/time.h:
+/usr/include/c++/12/bits/basic_ios.h:
+
+/usr/include/c++/12/pstl/execution_defs.h:
+
+/usr/include/c++/12/bit:
+
+/usr/include/c++/12/tr1/riemann_zeta.tcc:
+
+/usr/include/c++/12/tr1/poly_laguerre.tcc:
+
+/usr/include/c++/12/tr1/modified_bessel_func.tcc:
+
+/usr/include/c++/12/tr1/legendre_function.tcc:
+
+/usr/include/c++/12/tr1/hypergeometric.tcc:
+
+/usr/include/x86_64-linux-gnu/c++/12/bits/gthr.h:
+
+/usr/include/c++/12/tr1/beta_function.tcc:
+
+/usr/include/c++/12/tr1/bessel_function.tcc:
+
+/usr/include/c++/12/ostream:
+
+/usr/include/c++/12/tr1/special_function_util.h:
+
+/usr/include/c++/12/tr1/gamma.tcc:
+
+/usr/include/c++/12/bits/specfun.h:
+
+/usr/include/x86_64-linux-gnu/bits/iscanonical.h:
+
+/usr/include/c++/12/fstream:
+
+/usr/include/x86_64-linux-gnu/bits/fp-fast.h:
+
+/usr/include/c++/12/exception:
+
+/usr/include/x86_64-linux-gnu/bits/fp-logb.h:
+
+/usr/include/x86_64-linux-gnu/bits/flt-eval-method.h:
+
+/usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h:
+
+/usr/include/c++/12/random:
+
+/usr/include/c++/12/bits/streambuf.tcc:
+
+/usr/include/c++/12/bits/parse_numbers.h:
+
+/usr/include/x86_64-linux-gnu/bits/timex.h:
 
 /usr/include/c++/12/cassert:
+
+/usr/include/x86_64-linux-gnu/bits/time.h:
+
+/usr/include/c++/12/bits/basic_ios.tcc:
+
+/usr/include/c++/12/ctime:
+
+/usr/include/c++/12/limits:
+
+/usr/include/c++/12/bits/chrono.h:
+
+/usr/include/c++/12/chrono:
+
+/home/drelto/prog/optimisation-combinatoire/src/local_search.hpp:
 
 /home/drelto/prog/optimisation-combinatoire/src/schedule.hpp:
 
@@ -279,11 +368,15 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 
 /usr/include/c++/12/bits/streambuf_iterator.h:
 
+/usr/include/c++/12/numeric:
+
 /usr/include/c++/12/vector:
 
 /usr/include/c++/12/bits/basic_string.tcc:
 
 /usr/include/c++/12/bits/charconv.h:
+
+/usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/error_t.h:
 
@@ -317,9 +410,15 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 
 /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
 
+/usr/include/c++/12/tr1/exp_integral.tcc:
+
 /usr/lib/gcc/x86_64-linux-gnu/12/include/stdint.h:
 
+/usr/include/c++/12/bits/random.tcc:
+
 /usr/include/x86_64-linux-gnu/c++/12/bits/c++allocator.h:
+
+/usr/include/c++/12/tr1/poly_hermite.tcc:
 
 /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
 
@@ -336,6 +435,8 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 /usr/include/x86_64-linux-gnu/bits/types/mbstate_t.h:
 
 /usr/include/c++/12/backward/binders.h:
+
+/usr/include/x86_64-linux-gnu/c++/12/bits/opt_random.h:
 
 /usr/include/stdint.h:
 
@@ -403,9 +504,15 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 
 /usr/include/x86_64-linux-gnu/bits/types/FILE.h:
 
+/usr/include/x86_64-linux-gnu/bits/math-vector.h:
+
 /usr/include/c++/12/bits/stl_pair.h:
 
+/usr/include/c++/12/cmath:
+
 /usr/include/features.h:
+
+/usr/include/c++/12/tr1/ell_integral.tcc:
 
 /home/drelto/prog/optimisation-combinatoire/tests/test_core.cpp:
 
@@ -427,6 +534,8 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 
 /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
 
+/usr/include/x86_64-linux-gnu/bits/mathcalls.h:
+
 /usr/include/c++/12/cstdint:
 
 /usr/include/c++/12/clocale:
@@ -445,11 +554,17 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 
 /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
 
+/usr/include/c++/12/bits/stl_numeric.h:
+
 /usr/include/x86_64-linux-gnu/sys/cdefs.h:
+
+/usr/include/c++/12/pstl/glue_numeric_defs.h:
 
 /usr/lib/linux/uapi/x86/asm/errno.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h:
+
+/usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h:
 
 /usr/include/c++/12/bits/memoryfwd.h:
 
@@ -481,6 +596,8 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 
 /usr/include/x86_64-linux-gnu/bits/endianness.h:
 
+/usr/include/c++/12/bits/random.h:
+
 /usr/include/x86_64-linux-gnu/bits/endian.h:
 
 /usr/include/x86_64-linux-gnu/gnu/stubs.h:
@@ -501,6 +618,8 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 
 /usr/include/c++/12/debug/debug.h:
 
+/usr/include/c++/12/bits/uniform_int_dist.h:
+
 /usr/include/c++/12/bits/std_abs.h:
 
 /usr/include/c++/12/debug/assertions.h:
@@ -511,6 +630,8 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 
 /usr/include/c++/12/bits/utility.h:
 
+/usr/include/c++/12/ratio:
+
 /usr/include/x86_64-linux-gnu/bits/types/time_t.h:
 
 /usr/include/locale.h:
@@ -518,6 +639,8 @@ CMakeFiles/jsp_tests.dir/tests/test_core.cpp.o: /home/drelto/prog/optimisation-c
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h:
 
 /usr/include/c++/12/bits/stl_function.h:
+
+/usr/include/math.h:
 
 /usr/include/c++/12/pstl/pstl_config.h:
 

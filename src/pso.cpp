@@ -24,6 +24,8 @@ struct Particle {
 
 std::vector<int> decode_keys(const Instance& instance,
                              const std::vector<double>& keys) {
+    // Chaque particule contient une cle par operation. Le tri des cles donne
+    // une sequence de jobs ; l'indice divise par m donne le job.
     std::vector<int> indices(keys.size());
     for (std::size_t index = 0; index < indices.size(); ++index) {
         indices[index] = static_cast<int>(index);
@@ -50,6 +52,9 @@ Schedule decode(const Instance& instance, const std::vector<double>& keys,
 std::vector<double> keys_from_schedule(const Instance& instance,
                                        const Schedule& schedule,
                                        std::mt19937_64& random) {
+    // Apres une recherche locale, on reconstruit des cles dont le tri
+    // reproduit l'ordre des operations du planning : c'est la reinjection
+    // lamarckienne.
     std::vector<std::pair<int, int>> order;
     for (int job = 0; job < instance.jobs; ++job) {
         for (int operation = 0; operation < instance.machines; ++operation) {
@@ -67,6 +72,8 @@ std::vector<double> keys_from_schedule(const Instance& instance,
 }
 
 std::vector<double> keys_from_priority(const Instance& instance, int rule) {
+    // Les trois premieres particules utilisent des priorites simples pour
+    // fournir rapidement des points de depart structures a l'essaim.
     std::vector<int> next(instance.jobs, 0);
     std::vector<int> sequence;
     sequence.reserve(static_cast<std::size_t>(instance.jobs * instance.machines));
@@ -111,6 +118,8 @@ void write_if_due(const Instance& instance, const Schedule& schedule,
                   const SolverOptions& options, const Clock::time_point& start,
                   Clock::time_point& last_write, bool force) {
     const auto now = Clock::now();
+    // Une ecriture periodique protege le meilleur resultat si le programme
+    // est interrompu, sans ralentir chaque evaluation.
     if (!force && now - last_write < std::chrono::seconds(2)) {
         return;
     }
@@ -125,6 +134,8 @@ void write_if_due(const Instance& instance, const Schedule& schedule,
 
 Schedule solve(const Instance& instance, const SolverOptions& options) {
     const auto start = Clock::now();
+    // --time 0 signifie "pas de limite". Dans ce cas, --target peut arreter
+    // la recherche lorsqu'un makespan donne est atteint.
     const auto deadline = options.seconds == 0.0
         ? Clock::time_point::max()
         : start + std::chrono::duration_cast<Clock::duration>(
@@ -140,6 +151,8 @@ Schedule solve(const Instance& instance, const SolverOptions& options) {
         log << "temps_ms;meilleur_makespan\n";
     }
 
+    // Chaque worker possede son propre essaim et son propre generateur
+    // aleatoire. Seul le meilleur global est partage entre les threads.
     auto worker = [&](int worker_id) {
         std::mt19937_64 random(options.seed +
                                0x9e3779b97f4a7c15ULL * (worker_id + 1));
@@ -203,6 +216,8 @@ Schedule solve(const Instance& instance, const SolverOptions& options) {
             }
         }
 
+        // Mise a jour PSO : inertie, attraction vers le meilleur personnel
+        // puis attraction vers le meilleur global.
         while (options.use_pso && Clock::now() < deadline &&
                !target_reached.load()) {
             const double elapsed =

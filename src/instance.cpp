@@ -18,6 +18,8 @@ Instance read_instance(const std::string& path) {
         throw std::runtime_error("Impossible d'ouvrir l'instance: " + path);
     }
 
+    // On nettoie d'abord le fichier pour accepter les commentaires et
+    // les lignes vides, y compris avec des fins de ligne Windows.
     std::vector<std::string> lines;
     std::string line;
     while (std::getline(input, line)) {
@@ -32,6 +34,8 @@ Instance read_instance(const std::string& path) {
     Instance result;
     std::size_t index = 0;
     {
+        // Certaines instances JSPLIB ont un nom en premiere ligne, d'autres
+        // commencent directement par les dimensions jobs x machines.
         std::istringstream first(lines[0]);
         int a = 0;
         int b = 0;

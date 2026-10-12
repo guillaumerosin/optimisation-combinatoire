@@ -15,4 +15,5 @@ struct Instance {
     std::vector<std::vector<Operation>> operations;
 };
 
+// Lit une instance texte dans le format jobs, machines, puis recettes.
 Instance read_instance(const std::string& path);

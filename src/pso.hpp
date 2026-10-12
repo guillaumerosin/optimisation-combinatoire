@@ -21,4 +21,5 @@ struct SolverOptions {
     std::string log_path;
 };
 
+// Lance un ou plusieurs essaims jusqu'a la limite ou la cible demandee.
 Schedule solve(const Instance& instance, const SolverOptions& options);

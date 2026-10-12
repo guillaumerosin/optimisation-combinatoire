@@ -15,6 +15,8 @@ Schedule decode_semi_active(const Instance& instance,
     Schedule result;
     result.jobs.assign(static_cast<std::size_t>(instance.jobs),
                        std::vector<ScheduledOperation>());
+    // next[job] indique quelle operation de la recette doit etre planifiee.
+    // Les deux tableaux ready memorisent les contraintes deja rencontrees.
     std::vector<int> next(instance.jobs, 0);
     std::vector<int> job_ready(instance.jobs, 0);
     std::vector<int> machine_ready(instance.machines, 0);
@@ -24,6 +26,8 @@ Schedule decode_semi_active(const Instance& instance,
         }
         const int operation = next[job]++;
         const auto& task = instance.operations[job][operation];
+        // Une operation attend a la fois la fin du job precedent et la
+        // liberation de sa machine.
         const int start = std::max(job_ready[job], machine_ready[task.machine]);
         const int end = start + task.duration;
         result.jobs[job].push_back({task.machine, start, end});
@@ -46,10 +50,14 @@ Schedule decode_giffler_thompson(const Instance& instance,
     result.jobs.assign(static_cast<std::size_t>(instance.jobs), {});
     std::vector<int> next(instance.jobs, 0);
     std::vector<int> job_ready(instance.jobs, 0);
+    // Pour GT, on conserve les intervalles deja places sur chaque machine.
+    // Cela permet d'inserer une operation dans un trou disponible.
     std::vector<std::vector<std::pair<int, int>>> machine_intervals(
         static_cast<std::size_t>(instance.machines));
     std::vector<bool> used(sequence.size(), false);
     for (std::size_t scheduled = 0; scheduled < sequence.size(); ++scheduled) {
+        // On cherche d'abord l'operation qui termine le plus tot : elle
+        // definit le prochain conflit a traiter.
         int selected_job = -1;
         int selected_end = std::numeric_limits<int>::max();
         std::size_t selected_rank = sequence.size();
@@ -66,6 +74,7 @@ Schedule decode_giffler_thompson(const Instance& instance,
             }
         }
         if (selected_job < 0) throw std::runtime_error("Sequence invalide");
+        // delta controle la largeur de l'ensemble des operations eligibles.
         const int threshold = static_cast<int>(selected_end * delta);
         for (std::size_t rank = 0; rank < sequence.size(); ++rank) {
             if (used[rank]) continue;
@@ -104,6 +113,8 @@ void write_schedule_json(const Schedule& schedule, const Instance& instance,
     if (!output) {
         throw std::runtime_error("Impossible d'ecrire le resultat: " + path);
     }
+    // Le JSON est volontairement ecrit a la main pour ne dependre d'aucune
+    // bibliotheque externe.
     output << "{\n  \"makespan\": " << schedule.makespan
            << ",\n  \"jobs_schedule\": {\n";
     for (int job = 0; job < instance.jobs; ++job) {

@@ -16,6 +16,8 @@ int main(int argc, char** argv) {
         return 2;
     }
     try {
+        // Les options restent simples pour pouvoir etre expliquees et
+        // modifiees facilement pendant les essais du concours.
         SolverOptions options;
         std::string input = argv[1];
         for (int index = 2; index < argc; ++index) {

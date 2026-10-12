@@ -17,11 +17,12 @@ int id(const Instance& instance, Node node) {
 
 Schedule rebuild(const Instance& instance,
                  const std::vector<std::vector<Node>>& machine_order) {
+    // machine_order fixe les arcs disjonctifs du graphe : l'ordre choisi
+    // sur chaque machine. On reconstruit ensuite les dates par propagation.
     const int total = instance.jobs * instance.machines;
     std::vector<int> job_done(instance.jobs, 0);
     std::vector<int> machine_done(instance.machines, 0);
     std::vector<int> machine_position(instance.machines, 0);
-    std::vector<bool> done(static_cast<std::size_t>(total), false);
     Schedule result;
     result.jobs.assign(static_cast<std::size_t>(instance.jobs), {});
     for (int count = 0; count < total; ++count) {
@@ -52,7 +53,6 @@ Schedule rebuild(const Instance& instance,
         job_done[node.job] = end;
         machine_done[chosen_machine] = end;
         machine_position[chosen_machine]++;
-        done[id(instance, node)] = true;
     }
     for (const auto& operations : result.jobs) {
         if (static_cast<int>(operations.size()) != instance.machines) {
@@ -64,6 +64,7 @@ Schedule rebuild(const Instance& instance,
 
 std::vector<std::vector<Node>> machine_order(const Instance& instance,
                                              const Schedule& schedule) {
+    // On transforme les dates du planning en ordre de passage par machine.
     std::vector<std::vector<Node>> result(
         static_cast<std::size_t>(instance.machines));
     for (int job = 0; job < instance.jobs; ++job) {
@@ -84,6 +85,8 @@ std::vector<std::vector<Node>> machine_order(const Instance& instance,
 
 std::vector<Node> critical_path(const Instance& instance,
                                 const Schedule& schedule) {
+    // Le chemin critique est le plus long chemin du graphe des contraintes :
+    // retarder une de ses operations peut retarder tout le makespan.
     const int total = instance.jobs * instance.machines;
     std::vector<int> distance(static_cast<std::size_t>(total), 0);
     std::vector<int> predecessor(static_cast<std::size_t>(total), -1);
@@ -135,6 +138,8 @@ Schedule tabu_improve(const Instance& instance, const Schedule& initial,
                       std::mt19937_64&,
                       std::chrono::steady_clock::time_point deadline,
                       int max_iterations) {
+    // best est la solution courante, tandis que best_known protege la
+    // meilleure solution meme si la recherche accepte un mouvement degrade.
     Schedule best = initial;
     Schedule best_known = initial;
     auto order = machine_order(instance, best);
@@ -143,6 +148,8 @@ Schedule tabu_improve(const Instance& instance, const Schedule& initial,
         if (std::chrono::steady_clock::now() >= deadline) break;
         const auto path = critical_path(instance, best);
         std::vector<std::pair<int, int>> candidates;
+        // N5 : on ne considere que les paires voisines d'un meme bloc
+        // critique sur une machine.
         for (std::size_t index = 1; index < path.size(); ++index) {
             const Node left = path[index - 1];
             const Node right = path[index];
@@ -179,6 +186,8 @@ Schedule tabu_improve(const Instance& instance, const Schedule& initial,
                                      std::to_string(candidate.second);
             const bool is_tabu = tabu.count(move) != 0 &&
                                  tabu[move] > iteration;
+            // L'aspiration autorise un mouvement tabou s'il bat le meilleur
+            // connu, ce qui evite de bloquer une amelioration importante.
             if ((!is_tabu || trial.makespan < best.makespan) &&
                 trial.makespan < iteration_best.makespan) {
                 iteration_best = trial;

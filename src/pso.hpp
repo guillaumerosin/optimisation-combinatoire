@@ -8,6 +8,7 @@
 
 struct SolverOptions {
     double seconds = 55.0;
+    int target_makespan = -1;
     std::uint64_t seed = 0;
     int particles = 30;
     int threads = 1;

@@ -125,8 +125,11 @@ void write_if_due(const Instance& instance, const Schedule& schedule,
 
 Schedule solve(const Instance& instance, const SolverOptions& options) {
     const auto start = Clock::now();
-    const auto deadline = start + std::chrono::duration_cast<Clock::duration>(
-        std::chrono::duration<double>(options.seconds));
+    const auto deadline = options.seconds == 0.0
+        ? Clock::time_point::max()
+        : start + std::chrono::duration_cast<Clock::duration>(
+              std::chrono::duration<double>(options.seconds));
+    std::atomic<bool> target_reached(false);
     std::mutex best_mutex;
     Schedule global_best;
     global_best.makespan = std::numeric_limits<int>::max();
@@ -151,6 +154,9 @@ Schedule solve(const Instance& instance, const SolverOptions& options) {
         for (int particle_index = 0;
              particle_index < std::max(1, options.particles) &&
              Clock::now() < deadline; ++particle_index) {
+             if (target_reached.load()) {
+                 break;
+             }
             Particle particle;
             particle.position.resize(dimension);
             particle.velocity.resize(dimension);
@@ -190,13 +196,19 @@ Schedule solve(const Instance& instance, const SolverOptions& options) {
                 global_best = local_best;
                 write_if_due(instance, global_best, options, start, last_write,
                              true);
+                if (options.target_makespan > 0 &&
+                    global_best.makespan <= options.target_makespan) {
+                    target_reached.store(true);
+                }
             }
         }
 
-        while (options.use_pso && Clock::now() < deadline) {
+        while (options.use_pso && Clock::now() < deadline &&
+               !target_reached.load()) {
             const double elapsed =
                 std::chrono::duration<double>(Clock::now() - start).count();
-            const double ratio = std::min(1.0, elapsed / options.seconds);
+            const double ratio = options.seconds == 0.0
+                ? 0.0 : std::min(1.0, elapsed / options.seconds);
             const double inertia = options.decreasing_inertia
                 ? 0.9 - 0.5 * ratio : 0.7298;
             for (auto& particle : swarm) {
@@ -246,12 +258,16 @@ Schedule solve(const Instance& instance, const SolverOptions& options) {
                                 Clock::now() - start).count()
                                 << ';' << global_best.makespan << '\n';
                         }
+                        if (options.target_makespan > 0 &&
+                            global_best.makespan <= options.target_makespan) {
+                            target_reached.store(true);
+                        }
                     }
                 }
             }
         }
         if (!options.use_pso && options.use_local_search) {
-            while (Clock::now() < deadline) {
+            while (Clock::now() < deadline && !target_reached.load()) {
                 Schedule candidate = tabu_improve(
                     instance, local_best, random, deadline, 80);
                 if (candidate.makespan < local_best.makespan) {
@@ -261,6 +277,10 @@ Schedule solve(const Instance& instance, const SolverOptions& options) {
                         global_best = local_best;
                         write_if_due(instance, global_best, options, start,
                                      last_write, false);
+                        if (options.target_makespan > 0 &&
+                            global_best.makespan <= options.target_makespan) {
+                            target_reached.store(true);
+                        }
                     }
                 }
             }

@@ -28,3 +28,10 @@ cmake -S . -B build-sanitize -DCMAKE_BUILD_TYPE=Debug -DJSP_SANITIZE=ON
 cmake --build build-sanitize
 ctest --test-dir build-sanitize --output-on-failure
 ```
+
+Le script `tools/bench.py` lance une serie d'instances, valide chaque JSON et
+ecrit un CSV de temps :
+
+```sh
+python3 tools/bench.py build/jsp_pso instances/ --time 55 --out resultats
+```

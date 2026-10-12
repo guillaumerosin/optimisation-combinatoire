@@ -20,5 +20,14 @@ int main() {
     const Schedule schedule = decode_semi_active(instance, sequence);
     assert(schedule.makespan == 11);
     write_schedule_json(schedule, instance, "test_result.json");
+    {
+        std::ofstream unnamed("unnamed_instance.txt");
+        unnamed << "3 3\n"
+                << "0 3 1 2 2 4\n"
+                << "1 4 2 3 0 2\n"
+                << "2 2 0 5 1 3\n";
+    }
+    const Instance without_name = read_instance("unnamed_instance.txt");
+    assert(without_name.name == "unnamed_instance");
     return 0;
 }

@@ -7,6 +7,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <limits>
 #include <mutex>
 #include <random>
@@ -207,6 +208,11 @@ Schedule solve(const Instance& instance, const SolverOptions& options) {
             std::lock_guard<std::mutex> lock(best_mutex);
             if (local_best.makespan < global_best.makespan) {
                 global_best = local_best;
+                const auto elapsed = std::chrono::duration_cast<
+                    std::chrono::milliseconds>(Clock::now() - start).count();
+                std::cout << "[progression] temps_ms=" << elapsed
+                          << " makespan=" << global_best.makespan
+                          << " thread=" << worker_id << std::endl;
                 write_if_due(instance, global_best, options, start, last_write,
                              true);
                 if (options.target_makespan > 0 &&
@@ -265,6 +271,12 @@ Schedule solve(const Instance& instance, const SolverOptions& options) {
                     std::lock_guard<std::mutex> lock(best_mutex);
                     if (local_best.makespan < global_best.makespan) {
                         global_best = local_best;
+                        const auto elapsed = std::chrono::duration_cast<
+                            std::chrono::milliseconds>(
+                            Clock::now() - start).count();
+                        std::cout << "[progression] temps_ms=" << elapsed
+                                  << " makespan=" << global_best.makespan
+                                  << " thread=" << worker_id << std::endl;
                         write_if_due(instance, global_best, options, start,
                                      last_write, false);
                         if (log) {
@@ -290,6 +302,12 @@ Schedule solve(const Instance& instance, const SolverOptions& options) {
                     std::lock_guard<std::mutex> lock(best_mutex);
                     if (local_best.makespan < global_best.makespan) {
                         global_best = local_best;
+                        const auto elapsed = std::chrono::duration_cast<
+                            std::chrono::milliseconds>(
+                            Clock::now() - start).count();
+                        std::cout << "[progression] temps_ms=" << elapsed
+                                  << " makespan=" << global_best.makespan
+                                  << " thread=" << worker_id << std::endl;
                         write_if_due(instance, global_best, options, start,
                                      last_write, false);
                         if (options.target_makespan > 0 &&

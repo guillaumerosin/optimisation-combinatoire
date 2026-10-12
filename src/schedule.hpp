@@ -18,5 +18,8 @@ struct Schedule {
 
 Schedule decode_semi_active(const Instance& instance,
                             const std::vector<int>& sequence);
+Schedule decode_giffler_thompson(const Instance& instance,
+                                 const std::vector<int>& sequence,
+                                 double delta);
 void write_schedule_json(const Schedule& schedule, const Instance& instance,
                          const std::string& path);

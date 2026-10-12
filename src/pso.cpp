@@ -39,10 +39,12 @@ std::vector<int> decode_keys(const Instance& instance,
 }
 
 Schedule decode(const Instance& instance, const std::vector<double>& keys,
-                const SolverOptions&) {
-    // GT est volontairement conserve comme un point d'extension : la sequence
-    // de priorites reste toujours une representation realisable.
-    return decode_semi_active(instance, decode_keys(instance, keys));
+                const SolverOptions& options) {
+    const std::vector<int> sequence = decode_keys(instance, keys);
+    if (options.decoder == "gt") {
+        return decode_giffler_thompson(instance, sequence, options.delta);
+    }
+    return decode_semi_active(instance, sequence);
 }
 
 std::vector<double> keys_from_schedule(const Instance& instance,

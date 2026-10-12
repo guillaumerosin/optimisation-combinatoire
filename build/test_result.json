@@ -1,0 +1,8 @@
+{
+  "makespan": 11,
+  "jobs_schedule": {
+    "Job_0": [{"machine": 0, "start": 0, "end": 3}, {"machine": 1, "start": 4, "end": 6}, {"machine": 2, "start": 7, "end": 11}],
+    "Job_1": [{"machine": 1, "start": 0, "end": 4}, {"machine": 2, "start": 4, "end": 7}, {"machine": 0, "start": 8, "end": 10}],
+    "Job_2": [{"machine": 2, "start": 0, "end": 2}, {"machine": 0, "start": 3, "end": 8}, {"machine": 1, "start": 8, "end": 11}]
+  }
+}

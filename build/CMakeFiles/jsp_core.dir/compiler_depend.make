@@ -424,18 +424,21 @@ CMakeFiles/jsp_core.dir/src/local_search.cpp.o: /home/drelto/prog/optimisation-c
   /usr/include/c++/12/bits/stl_heap.h \
   /usr/include/c++/12/bits/stl_tempbuf.h \
   /usr/include/c++/12/pstl/glue_algorithm_defs.h \
+  /usr/include/c++/12/queue \
+  /usr/include/c++/12/deque \
+  /usr/include/c++/12/bits/stl_deque.h \
+  /usr/include/c++/12/bits/deque.tcc \
+  /usr/include/c++/12/bits/stl_queue.h \
+  /usr/include/c++/12/bits/uses_allocator.h \
   /usr/include/c++/12/unordered_map \
   /usr/include/c++/12/ext/aligned_buffer.h \
   /usr/include/c++/12/bits/hashtable.h \
   /usr/include/c++/12/bits/hashtable_policy.h \
   /usr/include/c++/12/tuple \
-  /usr/include/c++/12/bits/uses_allocator.h \
   /usr/include/c++/12/bits/enable_special_members.h \
   /usr/include/c++/12/bits/node_handle.h \
   /usr/include/c++/12/bits/unordered_map.h \
-  /usr/include/c++/12/bits/erase_if.h \
-  /usr/include/c++/12/unordered_set \
-  /usr/include/c++/12/bits/unordered_set.h
+  /usr/include/c++/12/bits/erase_if.h
 
 CMakeFiles/jsp_core.dir/src/pso.cpp.o: /home/drelto/prog/optimisation-combinatoire/src/pso.cpp \
   /usr/include/stdc-predef.h \
@@ -709,6 +712,7 @@ CMakeFiles/jsp_core.dir/src/pso.cpp.o: /home/drelto/prog/optimisation-combinatoi
   /usr/include/x86_64-linux-gnu/c++/12/bits/basic_file.h \
   /usr/include/x86_64-linux-gnu/c++/12/bits/c++io.h \
   /usr/include/c++/12/bits/fstream.tcc \
+  /usr/include/c++/12/iostream \
   /usr/include/c++/12/mutex \
   /usr/include/c++/12/bits/std_mutex.h \
   /usr/include/c++/12/bits/unique_lock.h \
@@ -937,8 +941,6 @@ CMakeFiles/jsp_core.dir/src/schedule.cpp.o: /home/drelto/prog/optimisation-combi
 
 /home/drelto/prog/optimisation-combinatoire/src/pso.hpp:
 
-/usr/include/c++/12/bits/unordered_set.h:
-
 /usr/include/c++/12/bits/erase_if.h:
 
 /usr/include/c++/12/bits/unordered_map.h:
@@ -950,6 +952,12 @@ CMakeFiles/jsp_core.dir/src/schedule.cpp.o: /home/drelto/prog/optimisation-combi
 /usr/include/c++/12/bits/hashtable.h:
 
 /usr/include/c++/12/unordered_map:
+
+/usr/include/c++/12/bits/stl_queue.h:
+
+/usr/include/c++/12/bits/deque.tcc:
+
+/usr/include/c++/12/queue:
 
 /usr/include/c++/12/bits/stl_tempbuf.h:
 
@@ -1083,6 +1091,8 @@ CMakeFiles/jsp_core.dir/src/schedule.cpp.o: /home/drelto/prog/optimisation-combi
 
 /usr/include/c++/12/bits/postypes.h:
 
+/usr/include/c++/12/bits/stl_deque.h:
+
 /usr/include/x86_64-linux-gnu/bits/cpu-set.h:
 
 /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h:
@@ -1197,8 +1207,6 @@ CMakeFiles/jsp_core.dir/src/schedule.cpp.o: /home/drelto/prog/optimisation-combi
 
 /usr/include/x86_64-linux-gnu/bits/types/locale_t.h:
 
-/usr/include/c++/12/unordered_set:
-
 /usr/include/x86_64-linux-gnu/bits/wctype-wchar.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h:
@@ -1246,6 +1254,8 @@ CMakeFiles/jsp_core.dir/src/schedule.cpp.o: /home/drelto/prog/optimisation-combi
 /usr/lib/gcc/x86_64-linux-gnu/12/include/stdint.h:
 
 /usr/include/c++/12/tr1/exp_integral.tcc:
+
+/usr/include/c++/12/deque:
 
 /usr/include/c++/12/ext/type_traits.h:
 
@@ -1320,6 +1330,8 @@ CMakeFiles/jsp_core.dir/src/schedule.cpp.o: /home/drelto/prog/optimisation-combi
 /usr/include/x86_64-linux-gnu/bits/time.h:
 
 /home/drelto/prog/optimisation-combinatoire/src/local_search.cpp:
+
+/usr/include/c++/12/iostream:
 
 /usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
 

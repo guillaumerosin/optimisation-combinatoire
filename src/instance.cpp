@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
@@ -9,6 +10,17 @@ namespace {
 bool is_comment_or_empty(const std::string& line) {
     const auto first = line.find_first_not_of(" \t\r");
     return first == std::string::npos || line[first] == '#';
+}
+
+// Retire les espaces et le '\r' des fichiers Windows autour du nom,
+// sinon le fichier de sortie s'appellerait "10_10\r.json".
+std::string trim(const std::string& text) {
+    const auto first = text.find_first_not_of(" \t\r");
+    if (first == std::string::npos) {
+        return "";
+    }
+    const auto last = text.find_last_not_of(" \t\r");
+    return text.substr(first, last - first + 1);
 }
 }
 
@@ -43,7 +55,7 @@ Instance read_instance(const std::string& path) {
         if ((first >> a >> b) && !(first >> extra)) {
             result.name = std::filesystem::path(path).stem().string();
         } else {
-            result.name = lines[0];
+            result.name = trim(lines[0]);
             ++index;
         }
     }
@@ -52,7 +64,9 @@ Instance read_instance(const std::string& path) {
     }
 
     std::istringstream dimensions(lines[index++]);
+    std::string extra;
     if (!(dimensions >> result.jobs >> result.machines) ||
+        (dimensions >> extra) ||
         result.jobs <= 0 || result.machines <= 0) {
         throw std::runtime_error("Dimensions invalides dans l'instance");
     }
@@ -64,6 +78,8 @@ Instance read_instance(const std::string& path) {
                                      std::to_string(job));
         }
         std::istringstream row(lines[index++]);
+        std::vector<bool> machine_used(
+            static_cast<std::size_t>(result.machines), false);
         for (int operation = 0; operation < result.machines; ++operation) {
             Operation value;
             if (!(row >> value.machine >> value.duration) ||
@@ -72,8 +88,26 @@ Instance read_instance(const std::string& path) {
                 throw std::runtime_error("Operation invalide pour le job " +
                                          std::to_string(job));
             }
+            // Dans un job shop, chaque job passe une seule fois par machine.
+            if (machine_used[value.machine]) {
+                throw std::runtime_error(
+                    "Machine " + std::to_string(value.machine) +
+                    " utilisee deux fois par le job " + std::to_string(job));
+            }
+            machine_used[value.machine] = true;
             result.operations[job].push_back(value);
         }
+        std::string leftover;
+        if (row >> leftover) {
+            throw std::runtime_error("Trop de nombres pour le job " +
+                                     std::to_string(job));
+        }
+    }
+    // Des lignes en trop ne bloquent pas la resolution : on previent
+    // seulement, pour ne pas perdre une instance le jour du concours.
+    if (index < lines.size()) {
+        std::cerr << "Attention: " << lines.size() - index
+                  << " ligne(s) ignoree(s) apres le dernier job\n";
     }
     return result;
 }

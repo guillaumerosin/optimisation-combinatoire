@@ -1,0 +1,820 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[french]{babel}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric,fit,babel}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.16,/pgf/number format/.cd,use comma,1000 sep={\,}}
+\usepackage{float}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{amsmath,amssymb}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+
+% Couleurs reprises de l'illustration interactive (atelier.html)
+\definecolor{jzero}{HTML}{2F6FD6}
+\definecolor{jun}{HTML}{D98A14}
+\definecolor{jdeux}{HTML}{1F9D74}
+\definecolor{accent}{HTML}{D1452F}
+\definecolor{encre}{HTML}{18202A}
+\definecolor{gris}{HTML}{5B6774}
+\definecolor{grille}{HTML}{E6EAEF}
+\definecolor{fond}{HTML}{EEF1F4}
+
+\newtcolorbox{idee}[1][]{colback=fond,colframe=jzero,boxrule=0.6pt,arc=2pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt,fonttitle=\bfseries,title=#1}
+\newtcolorbox{calcul}{colback=fond,colframe=gris,boxrule=0.4pt,arc=2pt,
+  left=6pt,right=6pt,top=3pt,bottom=3pt,fontupper=\ttfamily\small}
+\newtcolorbox{pseudo}[1]{colback=white,colframe=encre,boxrule=0.5pt,arc=2pt,
+  fonttitle=\bfseries\small,title=#1,left=4pt,right=4pt}
+
+\lstdefinestyle{algo}{basicstyle=\small\ttfamily,columns=fullflexible,
+  keepspaces=true,mathescape=true,numbers=left,numberstyle=\tiny\color{gris},
+  numbersep=6pt,xleftmargin=14pt,
+  keywordstyle=\bfseries\color{jzero},
+  morekeywords={pour,tant,que,si,sinon,alors,fin,retourner,faire,chaque,dans,et,ou},
+  literate={é}{{\'e}}1 {è}{{\`e}}1 {à}{{\`a}}1 {ê}{{\^e}}1 {ù}{{\`u}}1
+           {ô}{{\^o}}1 {î}{{\^i}}1 {ç}{{\c c}}1 {É}{{\'E}}1 {û}{{\^u}}1
+           {←}{{$\leftarrow$}}1 {≤}{{$\le$}}1 {×}{{$\times$}}1}
+\lstdefinestyle{shell}{basicstyle=\small\ttfamily,columns=fullflexible,
+  backgroundcolor=\color{fond},frame=none,xleftmargin=6pt,xrightmargin=6pt,
+  keepspaces=true}
+\lstdefinestyle{json}{basicstyle=\footnotesize\ttfamily,columns=fullflexible,
+  backgroundcolor=\color{fond},frame=none,xleftmargin=6pt,keepspaces=true}
+
+% ---------- Diagramme de Gantt pour l'atelier 3 x 3 ----------
+% \op{machine}{debut}{fin}{couleur}{etiquette}
+\newcommand{\op}[5]{%
+  \fill[#4,rounded corners=1.5pt] (#2,{2-#1+0.13}) rectangle (#3,{2-#1+0.87});
+  \node[white,font=\scriptsize\bfseries] at ({(#2+#3)/2},{2-#1+0.5}) {#5};}
+% \ganttfond{T}
+\newcommand{\ganttfond}[1]{%
+  \foreach \t in {0,...,#1} \draw[grille] (\t,0) -- (\t,3);
+  \foreach \m in {0,1,2} {
+    \draw[gris!50] (0,{2-\m}) rectangle (#1,{3-\m});
+    \node[anchor=east,font=\small\ttfamily,text=gris] at (-0.15,{2-\m+0.5}) {M\m};}
+  \foreach \t in {0,2,...,#1} \node[font=\scriptsize\ttfamily,text=gris] at (\t,-0.3) {\t};}
+\newcommand{\makespanligne}[1]{%
+  \draw[accent,very thick,dashed] (#1,-0.05) -- (#1,3.25);
+  \node[accent,font=\small\ttfamily\bfseries,fill=white,inner sep=1pt] at (#1,3.5) {makespan = #1};}
+
+\title{\textbf{Résoudre le Job Shop par essaims particulaires}\\[4pt]
+  \large Explication du code du projet \texttt{jsp\_pso}}
+\author{Groupe B --- Optimisation combinatoire, HEH 2026--2027}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Ce document explique, fichier par fichier, ce que fait le programme \texttt{jsp\_pso} :
+comment il lit une instance, comment une \emph{particule} (une simple liste de nombres)
+devient un planning, comment l'essaim améliore ces plannings au fil du temps, et
+comment on l'empêche de stagner. Chaque mécanisme est illustré sur le petit atelier
+$3\times3$ des slides du cours, puis mesuré sur des instances de référence (JSPLIB).
+Le solveur est un PSO \emph{pur} : aucune recherche locale n'y est ajoutée.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section{Le problème : qui passe en premier sur la machine ?}
+
+\subsection{L'atelier}
+
+Un \emph{job shop} est un ensemble de \textbf{jobs} à exécuter sur un ensemble de
+\textbf{machines}. Chaque job suit une \emph{recette} fixe : une suite d'opérations,
+chacune sur une machine précise, pendant une durée précise. Trois contraintes doivent
+être respectées :
+\begin{enumerate}
+  \item \textbf{ordre imposé} : les étapes d'un même job se font dans l'ordre de la recette ;
+  \item \textbf{une machine, une opération à la fois} ;
+  \item \textbf{pas d'interruption} : une étape commencée va jusqu'au bout.
+\end{enumerate}
+Les recettes ne sont pas négociables. \textbf{La seule décision, c'est l'ordre} dans
+lequel chaque machine traite les jobs qui l'utilisent. L'objectif est de minimiser le
+\textbf{makespan}, l'instant où le dernier job se termine.
+
+\begin{table}[h]
+\centering
+\caption{L'exemple des slides : 3 jobs, 3 machines (machine $\cdot$ durée).}
+\label{tab:recettes}
+\begin{tabular}{lccc}
+\toprule
+ & Étape 1 & Étape 2 & Étape 3\\
+\midrule
+\textcolor{jzero}{\textbf{Job 0}} & M0 $\cdot$ 3 & M1 $\cdot$ 2 & M2 $\cdot$ 4\\
+\textcolor{jun}{\textbf{Job 1}}   & M1 $\cdot$ 4 & M2 $\cdot$ 3 & M0 $\cdot$ 2\\
+\textcolor{jdeux}{\textbf{Job 2}} & M2 $\cdot$ 2 & M0 $\cdot$ 5 & M1 $\cdot$ 3\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Même atelier, deux ordres, deux résultats}
+
+Plaçons les opérations une par une dans un ordre donné. Chaque opération démarre
+\emph{au plus tôt} : quand son job est prêt \textbf{et} que sa machine est libre.
+
+\begin{calcul}
+début = max(job prêt, machine libre)\qquad fin = début + durée
+\end{calcul}
+
+L'ordre A ci-dessous est la suite $J_1, J_0, J_2, J_2, J_0, J_1, J_1, J_2, J_0$ : chaque
+lettre désigne \og la prochaine étape de ce job \fg{}. Prenons la cinquième opération
+placée, $J_0$ étape 2 sur M1 :
+
+\begin{calcul}
+J0 a fini son étape 1 à \ \ 3\\
+M1 est occupée par J1 jusqu'à 4\\
+début = max(3, 4) = 4 \quad $\Rightarrow$ J0 attend que la machine se libère\\
+fin \ \ = 4 + 2 = 6
+\end{calcul}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[x=0.66cm,y=0.72cm]
+  \node[anchor=west,font=\bfseries] at (-1.3,4.3) {Ordre A (exemple 1 des slides)};
+  \ganttfond{14}
+  \op{0}{0}{3}{jzero}{J0·1} \op{0}{3}{8}{jdeux}{J2·2} \op{0}{8}{10}{jun}{J1·3}
+  \op{1}{0}{4}{jun}{J1·1}   \op{1}{4}{6}{jzero}{J0·2} \op{1}{8}{11}{jdeux}{J2·3}
+  \op{2}{0}{2}{jdeux}{J2·1} \op{2}{4}{7}{jun}{J1·2}   \op{2}{7}{11}{jzero}{J0·3}
+  \makespanligne{11}
+\end{tikzpicture}
+
+\vspace{6mm}
+\begin{tikzpicture}[x=0.66cm,y=0.72cm]
+  \node[anchor=west,font=\bfseries] at (-1.3,4.3) {Ordre B (exemple 2 des slides)};
+  \ganttfond{14}
+  \op{0}{0}{3}{jzero}{J0·1} \op{0}{3}{8}{jdeux}{J2·2} \op{0}{12}{14}{jun}{J1·3}
+  \op{1}{3}{5}{jzero}{J0·2} \op{1}{5}{9}{jun}{J1·1}   \op{1}{9}{12}{jdeux}{J2·3}
+  \op{2}{0}{2}{jdeux}{J2·1} \op{2}{5}{9}{jzero}{J0·3} \op{2}{9}{12}{jun}{J1·2}
+  \makespanligne{14}
+\end{tikzpicture}
+\caption{Les mêmes recettes avec deux ordres de placement. Dans l'ordre B, $J_0$ passe
+en premier sur M1 : $J_1$ doit attendre jusqu'à 5 et tout le reste glisse
+(\emph{effet domino}). Le makespan passe de 11 à 14.}
+\label{fig:gantt-ab}
+\end{figure}
+
+\subsection{Pourquoi une métaheuristique ?}
+
+Pour ce petit atelier, il existe $\frac{9!}{3!\,3!\,3!} = 1\,680$ ordres de placement.
+Nous les avons tous énumérés : le meilleur donne \textbf{11}, le pire \textbf{28}, et
+384 ordres atteignent l'optimum. Pour 10 jobs et 10 machines (l'exemple \texttt{10\_10}
+des slides), le nombre d'ordres monte à $\frac{100!}{(10!)^{10}} \approx 2{,}4\times10^{92}$.
+Il est impossible de tout essayer : il faut une méthode qui \emph{cherche intelligemment}.
+C'est le rôle de l'optimisation par essaims particulaires.
+
+% =====================================================================
+\section{Vue d'ensemble du programme}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw=encre,rounded corners=3pt,fill=white,align=center,font=\small,
+              minimum height=1.05cm,inner xsep=5pt},
+  file/.style={box,fill=fond},
+  arr/.style={-{Stealth[length=2.2mm]},thick,encre},
+  lab/.style={font=\scriptsize,text=gris},
+  node distance=9mm and 12mm]
+  \node[file] (in) {\texttt{10\_10}\\ \scriptsize fichier texte};
+  \node[box,right=of in] (read) {\texttt{read\_instance}\\ \scriptsize instance.cpp};
+  \node[box,right=of read,fill=jzero!10] (solve)
+       {\texttt{solve}\\ \scriptsize pso.cpp : essaims};
+  \node[box,right=of solve] (out) {\texttt{write\_schedule\_json}\\ \scriptsize schedule.cpp};
+  \node[box,below=of solve,fill=jdeux!10] (dec)
+       {\texttt{decode\_active}\\ \scriptsize schedule.cpp : clés $\to$ planning};
+  \node[file,below=of out] (json) {\texttt{10\_10.json}\\ \scriptsize résultat};
+  \node[box,above=of solve,fill=fond] (main) {\texttt{main}\\ \scriptsize main.cpp : options};
+  \draw[arr] (in) -- (read);
+  \draw[arr] (read) -- node[lab,below]{Instance} (solve);
+  \draw[arr] ([xshift=-7mm]solve.south) -- node[lab,left]{particule} ([xshift=-7mm]dec.north);
+  \draw[arr] ([xshift=7mm]dec.north) -- node[lab,right]{makespan} ([xshift=7mm]solve.south);
+  \draw[arr] (solve) -- node[lab,below]{record} (out);
+  \draw[arr] (out) -- (json);
+  \draw[arr] (main) -- node[lab,right]{options} (solve);
+\end{tikzpicture}
+\caption{Le trajet des données dans le programme.}
+\label{fig:archi}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{Les fichiers du projet.}
+\begin{tabular}{>{\ttfamily}l p{10.5cm}}
+\toprule
+\textrm{Fichier} & Rôle\\
+\midrule
+src/instance.cpp & lit le fichier d'instance et vérifie qu'il est bien formé\\
+src/schedule.cpp & les deux décodeurs (particule $\to$ planning) et l'écriture du JSON\\
+src/pso.cpp      & l'essaim : mise à jour des particules, topologies, redémarrage, multi-essaims\\
+src/main.cpp     & lit les options de la ligne de commande et lance le solveur\\
+tests/test\_core.cpp & tests automatiques (lecture, exemple du cours, PSO)\\
+tools/validate.py & vérificateur indépendant d'un JSON produit\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =====================================================================
+\section{Lire l'instance (\texttt{instance.cpp})}
+
+Le fichier d'entrée a le format des slides : un nom, puis le nombre de jobs et de
+machines, puis une ligne par job contenant les couples \texttt{machine durée}.
+
+\begin{lstlisting}[style=shell]
+10_10
+10 10
+4 88 8 68 6 94 5 99 1 67 2 89 9 77 7 99 0 86 3 92
+...
+\end{lstlisting}
+
+En mémoire, l'atelier devient une structure \texttt{Instance} : le nom, \texttt{jobs},
+\texttt{machines}, et \texttt{operations[job][étape]} qui contient le couple
+\texttt{(machine, duration)}.
+
+La lecture est volontairement \textbf{robuste}, car une erreur de lecture le jour du
+concours coûterait une instance entière :
+\begin{itemize}
+  \item les lignes vides, les commentaires \texttt{\#} et les fins de ligne Windows
+        (\texttt{\textbackslash r}) sont acceptés ;
+  \item si la première ligne contient déjà les dimensions, le nom est pris dans le nom du
+        fichier (le JSON de sortie doit porter le même nom que l'instance) ;
+  \item un fichier mal formé est refusé avec un message clair : couple manquant ou en
+        trop, machine inexistante, machine utilisée deux fois par un même job, job manquant ;
+  \item des lignes en trop après le dernier job déclenchent seulement un avertissement.
+\end{itemize}
+
+% =====================================================================
+\section{Représenter une solution : les clés aléatoires}
+
+Le PSO a été inventé pour des problèmes \emph{continus} : une particule y est un point
+de $\mathbb{R}^D$ qui se déplace avec une vitesse. Or un ordonnancement est
+\emph{discret}. Le pont entre les deux mondes est le codage par \textbf{clés aléatoires}.
+
+\begin{idee}[Idée clé]
+Une particule est une liste de $D = n \times m$ nombres réels : \textbf{une clé par
+opération}. La clé de l'étape $o$ du job $j$ est rangée à l'indice $j\cdot m + o$.
+Un \emph{décodeur} transforme ces nombres en planning, ce qui donne un makespan.
+\end{idee}
+
+Sur l'atelier $3\times3$, une particule contient donc 9 nombres. Avec le décodeur le plus
+simple (\og semi-actif \fg{}, section~\ref{sec:semi}), on trie les clés par ordre
+croissant ; chaque clé triée désigne un job, et on obtient une séquence de placement.
+
+\begin{table}[h]
+\centering
+\caption{Une particule qui code l'ordre A. Trier les clés redonne la séquence
+$J_1, J_0, J_2, J_2, J_0, J_1, J_1, J_2, J_0$, donc le planning de makespan 11.}
+\label{tab:cles}
+\small
+\begin{tabular}{l*{9}{c}}
+\toprule
+Opération & J0·1 & J0·2 & J0·3 & J1·1 & J1·2 & J1·3 & J2·1 & J2·2 & J2·3\\
+Indice $j\cdot m+o$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8\\
+\midrule
+Clé & 0,12 & 0,40 & 0,88 & 0,05 & 0,52 & 0,61 & 0,21 & 0,33 & 0,77\\
+Rang après tri & 2 & 5 & 9 & 1 & 6 & 7 & 3 & 4 & 8\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+L'intérêt est double : \emph{n'importe quelle} liste de nombres donne un planning valide
+(les contraintes sont garanties par le décodeur), et l'on peut appliquer telles quelles
+les formules continues du PSO.
+
+% =====================================================================
+\section{Décoder une particule (\texttt{schedule.cpp})}
+
+\subsection{Le décodeur semi-actif}
+\label{sec:semi}
+
+C'est le décodeur utilisé dans les exemples des slides : on prend la séquence de jobs
+obtenue par le tri, et on place chaque opération \emph{au plus tôt} derrière celles déjà
+placées. C'est exactement le calcul $\text{début}=\max(\text{job prêt},\text{machine libre})$
+de la figure~\ref{fig:gantt-ab}.
+
+\begin{pseudo}{decode\_semi\_active}
+\begin{lstlisting}[style=algo]
+job_prêt[j] ← 0 ; machine_libre[k] ← 0 ; suivante[j] ← 0
+pour chaque job j dans la séquence faire
+    (k, durée) ← operations[j][suivante[j]] ; suivante[j] ← suivante[j] + 1
+    début ← max(job_prêt[j], machine_libre[k]) ; fin ← début + durée
+    job_prêt[j] ← fin ; machine_libre[k] ← fin
+retourner le plus grand fin   $\triangleright$ le makespan
+\end{lstlisting}
+\end{pseudo}
+
+Son défaut : il ne remplit jamais un \og trou \fg{} laissé sur une machine. Beaucoup de
+particules différentes donnent de mauvais plannings, et l'essaim perd son temps.
+
+\subsection{Le décodeur Giffler-Thompson paramétré (par défaut)}
+
+Le décodeur par défaut (\texttt{decode\_active}) suit l'algorithme de Giffler et Thompson,
+avec un paramètre $\delta$ (Gonçalves \emph{et al.}). Il construit le planning
+\emph{chronologiquement} et ne consulte la particule qu'au moment d'un \textbf{conflit}.
+À chaque étape :
+
+\begin{enumerate}
+  \item pour chaque job, on calcule le début au plus tôt de sa prochaine opération et sa fin ;
+  \item $\varphi$ = la plus petite fin possible. Sa machine $M^*$ est celle où se joue le
+        prochain conflit ;
+  \item $\sigma$ = le plus petit début possible sur $M^*$ ;
+  \item les \textbf{candidats} sont les opérations sur $M^*$ qui peuvent commencer dans la
+        fenêtre $[\sigma,\ \sigma + \delta(\varphi-\sigma)]$ ;
+  \item \textbf{la particule décide} : le candidat dont la clé est la plus petite passe.
+\end{enumerate}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[x=1.25cm,y=1cm]
+  \draw[-{Stealth},gris] (-0.3,0) -- (8.4,0) node[right,font=\small] {temps};
+  \foreach \t in {0,...,8} \draw[gris] (\t,0.08) -- (\t,-0.08) node[below,font=\scriptsize\ttfamily] {\t};
+  \fill[jzero!18] (0,0.2) rectangle (0.6,1.9);
+  \fill[accent!10] (0.6,0.2) rectangle (3,1.9);
+  % les deux fenetres, en accolades au-dessus
+  \draw[jzero,thick,|-|] (0,2.15) -- (0.6,2.15);
+  \node[font=\scriptsize,text=jzero!80!black,anchor=east] at (-0.1,2.15) {fenêtre si $\delta=0{,}2$};
+  \draw[accent,thick,|-|] (0,2.6) -- (3,2.6);
+  \node[font=\scriptsize,text=accent,anchor=west] at (3.1,2.6) {fenêtre si $\delta=1$};
+  \draw[very thick,jzero] (0,0.2) -- (0,1.9);
+  \node[font=\scriptsize,anchor=east] at (-0.05,1.05) {$\sigma=0$};
+  \draw[very thick,accent,dashed] (3,0.2) -- (3,1.9);
+  \node[font=\scriptsize,text=accent,anchor=west,fill=white,inner sep=1pt] at (3.05,1.1) {$\varphi=3$};
+  \fill[jzero,rounded corners=1.5pt] (0,1.3) rectangle (3,1.8);
+  \node[white,font=\scriptsize\bfseries] at (1.5,1.55) {J0·1 : 0 $\to$ 3};
+  \fill[jdeux,rounded corners=1.5pt] (2,0.35) rectangle (7,0.85);
+  \node[white,font=\scriptsize\bfseries] at (4.5,0.6) {J2·2 : 2 $\to$ 7};
+\end{tikzpicture}
+\caption{Étape 2 du décodage de l'atelier $3\times3$ : J0 et J2 veulent tous deux la
+machine M0. La fenêtre réglée par $\delta$ fixe qui est candidat. Avec $\delta=1$, les deux
+sont candidats et c'est la clé de la particule qui tranche ; avec $\delta=0{,}2$, seul J0
+peut commencer assez tôt (J2 ne commence qu'à $2 > 0{,}6$).}
+\label{fig:fenetre}
+\end{figure}
+
+Le paramètre $\delta$ règle la taille de l'espace de recherche. Avec $\delta=1$, on
+obtient des plannings \emph{actifs} : on ne peut avancer aucune opération sans en
+retarder une autre, et l'optimum fait toujours partie de cet ensemble. Avec $\delta=0$,
+on obtient des plannings \emph{sans retard} : une machine n'attend jamais quand une
+opération est prête. Cet ensemble est plus petit et souvent très bon, mais il ne contient
+pas toujours l'optimum. La valeur retenue, $\delta=0{,}2$, est un compromis mesuré
+expérimentalement (section~\ref{sec:resultats}).
+
+\begin{table}[h]
+\centering
+\caption{Déroulé complet du décodeur ($\delta=0{,}2$) sur l'atelier $3\times3$. Chaque
+case de candidat donne la machine et l'intervalle début--fin au plus tôt.}
+\label{tab:trace}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{c l l l c c c l}
+\toprule
+Pas & \textcolor{jzero}{J0} & \textcolor{jun}{J1} & \textcolor{jdeux}{J2} & $\varphi$ ($M^*$) & $\sigma$ & fenêtre & placé\\
+\midrule
+1 & M0 0--3  & M1 0--4  & M2 0--2  & 2 (M2)  & 0 & $[0;\,0{,}4]$ & J2 : 0--2\\
+2 & M0 0--3  & M1 0--4  & M0 2--7  & 3 (M0)  & 0 & $[0;\,0{,}6]$ & J0 : 0--3\\
+3 & M1 3--5  & M1 0--4  & M0 3--8  & 4 (M1)  & 0 & $[0;\,0{,}8]$ & J1 : 0--4\\
+4 & M1 4--6  & M2 4--7  & M0 3--8  & 6 (M1)  & 4 & $[4;\,4{,}4]$ & J0 : 4--6\\
+5 & M2 6--10 & M2 4--7  & M0 3--8  & 7 (M2)  & 4 & $[4;\,4{,}6]$ & J1 : 4--7\\
+6 & M2 7--11 & M0 7--9  & M0 3--8  & 8 (M0)  & 3 & $[3;\,4]$     & J2 : 3--8\\
+7 & M2 7--11 & M0 8--10 & M1 8--11 & 10 (M0) & 8 & $[8;\,8{,}4]$ & J1 : 8--10\\
+8 & M2 7--11 & --       & M1 8--11 & 11 (M2) & 7 & $[7;\,7{,}8]$ & J0 : 7--11\\
+9 & --       & --       & M1 8--11 & 11 (M1) & 8 & $[8;\,8{,}6]$ & J2 : 8--11\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Sur ce petit exemple, toutes les fenêtres ne contiennent qu'un seul candidat : le
+décodeur seul construit directement le planning optimal (makespan 11), le même que
+l'ordre A de la figure~\ref{fig:gantt-ab}. Sur une vraie instance $10\times10$, les
+conflits à plusieurs candidats sont nombreux, et ce sont eux que l'essaim apprend à
+trancher.
+
+\paragraph{Vitesse.} Le décodeur est appelé des millions de fois. Ses tableaux de
+travail sont réutilisés d'un appel à l'autre (\texttt{thread\_local}) et il ne fait que
+deux passes sur les jobs par opération placée. Il ne construit le planning complet
+(\texttt{schedule\_from\_starts}) que lorsqu'un nouveau record est trouvé. Résultat :
+environ $170\,000$ évaluations par seconde sur un $10\times10$, et $46\,\mu$s par
+évaluation sur un $30\times20$.
+
+% =====================================================================
+\section{L'essaim particulaire (\texttt{pso.cpp})}
+
+\subsection{Le principe}
+
+L'optimisation par essaims particulaires (Kennedy et Eberhart, 1995) imite une nuée
+d'oiseaux. Chaque particule $i$ possède :
+\begin{itemize}
+  \item une \textbf{position} $x_i$ (ses $D$ clés, donc un planning) ;
+  \item une \textbf{vitesse} $v_i$ ;
+  \item son \textbf{meilleur souvenir} $p_i$ (\emph{pbest}), la meilleure position qu'elle a visitée ;
+  \item un \textbf{guide social} $g_i$ : le meilleur souvenir de ses voisins (\emph{gbest}
+        quand le voisinage est tout l'essaim).
+\end{itemize}
+
+À chaque tour, chaque dimension $d$ de chaque particule est mise à jour :
+\[
+v_{i,d} \leftarrow \underbrace{w\,v_{i,d}}_{\text{inertie}}
+ + \underbrace{c_1 r_1 \,(p_{i,d}-x_{i,d})}_{\text{mémoire}}
+ + \underbrace{c_2 r_2 \,(g_{i,d}-x_{i,d})}_{\text{influence sociale}},
+\qquad
+x_{i,d} \leftarrow x_{i,d} + v_{i,d}
+\]
+où $r_1, r_2$ sont tirés au hasard dans $[0,1]$ à chaque fois.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=1.15,
+  pt/.style={circle,fill=#1,inner sep=2.2pt},
+  vec/.style={-{Stealth[length=2.6mm]},very thick,#1}]
+  \node[pt=gris,label={left:{$x_i$ (position)}}] (x) at (0,0) {};
+  \node[pt=jun,label={above:{$p_i$ (pbest)}}] (p) at (1.6,3.0) {};
+  \draw[jun,dotted] (2.6,1.4) -- (p);
+  \node[draw=encre,circle,very thick,minimum size=5.5mm,label={above:{$g_i$ (gbest)}}] (g) at (6.6,1.4) {};
+  \fill[encre] (g) circle (1.3pt);
+  \draw[jzero,dotted] (4.4,1.4) -- (g);
+  \draw[vec=gris!80] (0,0) -- (2.0,-1.0) node[midway,below left,font=\small] {$w\,v_i$ (inertie)};
+  \draw[vec=jun] (2.0,-1.0) -- (2.6,1.4) node[pos=0.3,right,font=\small] {mémoire};
+  \draw[vec=jzero] (2.6,1.4) -- (4.4,1.4) node[midway,above,font=\small] {sociale};
+  \draw[vec=accent,dashed] (0,0) -- (4.4,1.4) node[pos=0.28,above,sloped,font=\small] {nouvelle vitesse};
+  \node[pt=accent] at (4.4,1.4) {};
+  \node[font=\small,text=accent,anchor=north west] at (4.5,1.25) {nouvelle position};
+\end{tikzpicture}
+\caption{La nouvelle vitesse est la somme de trois tendances : continuer sur sa lancée,
+revenir vers son meilleur souvenir, et aller vers le meilleur de ses voisins.}
+\label{fig:vitesse}
+\end{figure}
+
+\subsection{Les réglages retenus}
+
+\begin{itemize}
+  \item \textbf{Coefficients} $c_1=c_2=1{,}49618$ : les valeurs de \og constriction \fg{} de
+        Clerc et Kennedy, qui garantissent un essaim stable.
+  \item \textbf{Inertie décroissante} de $w=0{,}9$ à $w=0{,}4$ au fil du temps : l'essaim
+        explore au début et affine à la fin (\texttt{-{}-no-decreasing-inertia} fixe
+        $w=0{,}7298$).
+  \item \textbf{Vitesse bornée} à $\pm0{,}2$ par dimension (\texttt{-{}-vmax}) : une particule
+        ne saute pas d'un bout à l'autre de l'espace en un tour.
+  \item \textbf{Positions non bornées} : seul l'ordre relatif des clés compte. Si on
+        bloquait les clés dans $[0,1]$, beaucoup s'empileraient à 0 ou à 1, deviendraient
+        égales, et la particule perdrait de l'information.
+  \item \textbf{Plateaux acceptés} : une position de \emph{même} makespan remplace le
+        meilleur souvenir. Le JSP a de larges plateaux de solutions équivalentes ; sans
+        cela, l'essaim s'y figerait.
+  \item \textbf{Départ structuré} : dans le premier essaim, trois particules partent de
+        règles de priorité classiques (SPT : opération la plus courte ; MWKR : job avec le
+        plus de travail restant ; MOPNR : job avec le plus d'opérations restantes). Les
+        autres partent au hasard.
+\end{itemize}
+
+\subsection{La boucle principale}
+
+\begin{pseudo}{Un essaim (un thread)}
+\begin{lstlisting}[style=algo]
+initialiser 30 particules (3 règles de priorité + hasard) ; évaluer chacune
+tant que le temps n'est pas écoulé faire
+    w ← 0,9 - 0,5 × (temps écoulé / budget)
+    calculer le guide de chaque particule (voisinage en anneau ou CLPSO)
+    pour chaque particule i faire
+        mettre à jour v$_i$ et x$_i$, dimension par dimension
+        f ← makespan(décoder(x$_i$))
+        si f ≤ f(p$_i$) alors p$_i$ ← x$_i$ ; publier si c'est un record global
+    si pas de progrès depuis 200 tours alors relancer l'essaim (sauf la meilleure)
+    tous les 50 tours : la pire particule adopte le record global (migration)
+\end{lstlisting}
+\end{pseudo}
+
+% =====================================================================
+\section{Empêcher l'essaim de stagner}
+
+Un PSO classique converge \textbf{trop vite} : toutes les particules s'agglutinent autour
+du premier bon planning trouvé, leurs vitesses tombent à zéro et plus rien ne bouge. Sur
+abz5, la version de départ ne progressait plus après une seconde, sur les 55 disponibles.
+Quatre mécanismes combattent ce phénomène. Ils restent tous des mécanismes d'essaim.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  p/.style={circle,draw=encre,fill=white,inner sep=0pt,minimum size=4.2mm,font=\tiny},
+  best/.style={p,fill=accent!25,very thick}]
+  % Topologie globale
+  \begin{scope}
+    \foreach \i in {0,...,7} \node[p] (g\i) at ({90+45*\i}:1.15) {\i};
+    \foreach \i in {0,...,7} \foreach \j in {0,...,7} {
+      \ifnum\i<\j \draw[gris!45] (g\i) -- (g\j); \fi}
+    \node[font=\small\bfseries] at (0,-1.75) {globale};
+    \node[font=\scriptsize,text=gris,align=center] at (0,-2.2) {tout le monde suit\\ le meilleur};
+  \end{scope}
+  % Anneau
+  \begin{scope}[xshift=4.2cm]
+    \foreach \i in {0,...,7} \node[p] (r\i) at ({90+45*\i}:1.15) {\i};
+    \foreach \i in {0,...,7} {
+      \pgfmathtruncatemacro{\a}{mod(\i+1,8)}
+      \pgfmathtruncatemacro{\b}{mod(\i+2,8)}
+      \draw[jzero,thick] (r\i) -- (r\a);
+      \draw[jzero!40] (r\i) to[bend left=12] (r\b);}
+    \node[font=\small\bfseries] at (0,-1.75) {anneau ($k=2$)};
+    \node[font=\scriptsize,text=gris,align=center] at (0,-2.2) {chacun ne voit que\\ 2 voisins de chaque côté};
+  \end{scope}
+  % CLPSO
+  \begin{scope}[xshift=8.6cm]
+    \node[best] (c) at (0,0) {$x_i$};
+    \foreach \i/\ang/\lab in {1/90/$d_1$,2/20/$d_2$,3/-50/$d_3$,4/-130/$d_4$,5/160/$d_5$} {
+      \node[p] (q\i) at (\ang:1.25) {};
+      \draw[-{Stealth},jdeux,thick] (q\i) -- (c) node[pos=0.35,font=\tiny,fill=white,inner sep=0.5pt] {\lab};}
+    \node[font=\small\bfseries] at (0,-1.75) {CLPSO};
+    \node[font=\scriptsize,text=gris,align=center] at (0,-2.2) {chaque dimension apprend\\ d'une particule différente};
+  \end{scope}
+\end{tikzpicture}
+\caption{Les trois façons de choisir le guide social d'une particule.}
+\label{fig:topologies}
+\end{figure}
+
+\subsection{La topologie en anneau}
+
+Les particules sont disposées en cercle. Le guide social de chacune est le meilleur
+souvenir parmi elle-même et ses $k=2$ voisins de chaque côté (\texttt{-{}-neighbors}). Un
+bon planning se propage donc de proche en proche au lieu de contaminer tout l'essaim
+d'un coup : plusieurs zones de l'espace restent explorées en parallèle plus longtemps.
+
+\subsection{Le redémarrage partiel}
+
+Si le meilleur de l'essaim ne s'améliore plus pendant 200 tours (\texttt{-{}-restart}),
+l'essaim a convergé. On garde sa meilleure particule et on relance toutes les autres au
+hasard, avec de nouvelles vitesses. Elles repartent explorer d'autres zones, et le
+meilleur planning n'est jamais perdu.
+
+Nous avons aussi essayé de relancer les particules \emph{autour} de la meilleure
+(position du record plus un bruit gaussien). C'était moins bon : l'essaim a besoin de vraie
+diversité, pas d'une variation sur le même thème.
+
+\subsection{CLPSO : l'apprentissage global}
+
+Dans le PSO à apprentissage global (\emph{Comprehensive Learning PSO}, Liang \emph{et al.},
+2006), une particule n'a plus de guide unique. Pour \textbf{chaque dimension} $d$, elle
+choisit un \og exemple \fg{} : avec une probabilité $P_c(i)$, le meilleur souvenir d'une
+autre particule tirée par tournoi (la meilleure de deux tirées au hasard), sinon le sien.
+\[
+v_{i,d} \leftarrow w\,v_{i,d} + c\, r\,\bigl(p_{\,e_i(d),\,d} - x_{i,d}\bigr),
+\qquad
+P_c(i) = 0{,}05 + 0{,}45\,\frac{e^{10\,i/(N-1)}-1}{e^{10}-1},
+\qquad c = 1{,}49445
+\]
+Les exemples sont tirés à nouveau quand la particule ne progresse plus pendant 7 tours.
+Comme chaque particule mélange des morceaux de plusieurs autres, l'essaim ne converge
+jamais d'un bloc. C'est plus lent, mais cela explore beaucoup mieux. CLPSO entretient
+lui-même sa diversité : on ne le redémarre pas.
+
+\subsection{Le multi-essaims hétérogène}
+
+Le programme lance \textbf{un essaim par cœur} du processeur (\texttt{-{}-threads 0}). Avec
+la topologie \texttt{mixed}, un essaim sur deux tourne en anneau avec redémarrage, les
+autres en CLPSO. Les mesures de la section~\ref{sec:resultats} montrent que CLPSO est
+meilleur jusqu'à $15\times15$ et l'anneau au-delà. Le mélange est donc robuste quelle que
+soit la taille des instances du concours.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  sw/.style={draw=encre,rounded corners=3pt,minimum width=2.3cm,minimum height=1cm,
+             align=center,font=\small},
+  arr/.style={-{Stealth[length=2mm]},thick}]
+  \node[draw=accent,very thick,rounded corners=4pt,fill=accent!8,minimum width=3.2cm,
+        minimum height=1.2cm,align=center] (rec) at (0,0)
+        {\textbf{record global}\\ \scriptsize planning + position};
+  \node[sw,fill=jzero!12] (s0) at (-4.2,1.5) {essaim 0\\ \scriptsize anneau};
+  \node[sw,fill=jdeux!12] (s1) at (4.2,1.5)  {essaim 1\\ \scriptsize CLPSO};
+  \node[sw,fill=jzero!12] (s2) at (-4.2,-1.5) {essaim 2\\ \scriptsize anneau};
+  \node[sw,fill=jdeux!12] (s3) at (4.2,-1.5)  {essaim 3\\ \scriptsize CLPSO};
+  \foreach \s in {s0,s1,s2,s3} {
+    \draw[arr,encre] (\s) to[bend left=22] node[pos=0.4,font=\tiny,fill=white,inner sep=1pt]{publier} (rec);
+    \draw[arr,accent,dashed] (rec) to[bend left=22] node[pos=0.6,font=\tiny,fill=white,inner sep=1pt]{migrer} (\s);}
+  \node[font=\scriptsize,text=gris] at (0,-2.6) {\dots{} jusqu'à un essaim par cœur (12 sur la machine de test)};
+\end{tikzpicture}
+\caption{Les essaims tournent en parallèle et ne partagent que le record. Toutes les 50
+itérations (\texttt{-{}-migrate}), la pire particule de chaque essaim adopte la position
+du record global.}
+\label{fig:multi}
+\end{figure}
+
+% =====================================================================
+\section{Parallélisme et fiabilité}
+
+\begin{itemize}
+  \item \textbf{Partage du record.} Le makespan du record est un \texttt{std::atomic}, lu
+        sans verrou à chaque évaluation. Le planning et la position du record sont
+        protégés par un \texttt{std::mutex}, pris seulement quand un essaim bat le record.
+        Les threads ne se ralentissent donc presque jamais.
+  \item \textbf{Hasard reproductible par essaim.} Chaque thread a son propre générateur
+        (\texttt{mt19937\_64}), initialisé à partir de \texttt{-{}-seed} et du numéro du thread.
+  \item \textbf{Budget de temps.} Le temps est mesuré avec une horloge monotone
+        (\texttt{steady\_clock}), insensible aux changements d'heure du système : 55
+        secondes par défaut pour une limite d'une minute.
+  \item \textbf{Rien n'est perdu.} Le meilleur planning est écrit dans le JSON au plus
+        toutes les 2 secondes pendant la recherche, puis une dernière fois à la fin. Si le
+        programme est interrompu, le dernier record est sur le disque.
+  \item \textbf{Vérification.} \texttt{tools/validate.py} relit l'instance et le JSON, et
+        contrôle les trois contraintes et le makespan, indépendamment du code C++.
+\end{itemize}
+
+\paragraph{Le format de sortie.} Pour l'atelier $3\times3$ avec l'ordre A :
+\begin{lstlisting}[style=json]
+{
+  "makespan": 11,
+  "jobs_schedule": {
+    "Job_0": [{"machine": 0, "start": 0, "end": 3},
+              {"machine": 1, "start": 4, "end": 6},
+              {"machine": 2, "start": 7, "end": 11}],
+    "Job_1": [{"machine": 1, "start": 0, "end": 4},
+              {"machine": 2, "start": 4, "end": 7},
+              {"machine": 0, "start": 8, "end": 10}],
+    "Job_2": [{"machine": 2, "start": 0, "end": 2},
+              {"machine": 0, "start": 3, "end": 8},
+              {"machine": 1, "start": 8, "end": 11}]
+  }
+}
+\end{lstlisting}
+
+% =====================================================================
+\section{Résultats}
+\label{sec:resultats}
+
+Les mesures portent sur 7 instances de la bibliothèque JSPLIB, de $10\times10$ à
+$30\times20$, dont l'optimum (ou la meilleure solution connue) est publié. Le critère est
+l'\textbf{écart} au meilleur connu :
+\[
+\text{écart} = \frac{\text{makespan obtenu} - \text{meilleur connu}}{\text{meilleur connu}}.
+\]
+
+\subsection{Convergence sur l'instance des slides}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.92\textwidth,height=6.2cm,
+  xmode=log,xmin=0.001,xmax=60,
+  xlabel={temps (secondes, échelle logarithmique)},ylabel={meilleur makespan},
+  ymin=1200,ymax=1700,
+  grid=major,grid style={grille},
+  legend style={font=\small,at={(0.98,0.96)},anchor=north east,draw=none,fill=white,fill opacity=0.85},
+  every axis plot/.append style={const plot,very thick}]
+  \addplot[gris,dashed] table[col sep=semicolon,x expr=\thisrow{temps_ms}/1000+0.001,y=meilleur_makespan] {donnees/conv_base.csv};
+  \addlegendentry{PSO de base (semi-actif, global, 1 essaim)}
+  \addplot[accent] table[col sep=semicolon,x expr=\thisrow{temps_ms}/1000+0.001,y=meilleur_makespan] {donnees/conv_final.csv};
+  \addlegendentry{PSO final (GT, mixte, multi-essaims)}
+  \addplot[jdeux,thick,dotted,no markers,const plot=false] coordinates {(0.001,1234) (60,1234)};
+  \addlegendentry{optimum connu (1234)}
+\end{axis}
+\end{tikzpicture}
+\caption{Évolution du meilleur makespan sur abz5 (l'instance \texttt{10\_10} des slides),
+en 55 secondes. Chaque marche est un nouveau record. Le PSO de base trouve son dernier
+record (1283, soit 4,0~\% au-dessus de l'optimum) après 5,4~s puis n'avance plus. Le PSO
+final atteint 1239 (0,4~\%) dès 0,25~s : sur une instance de cette taille, ses 12 essaims
+trouvent très vite un planning proche de l'optimum, puis plafonnent eux aussi.}
+\label{fig:convergence}
+\end{figure}
+
+\subsection{Ce qu'apporte chaque mécanisme}
+
+Chaque ligne ajoute un mécanisme à la précédente. Les mesures sont faites en 10 secondes
+sur 2 à 3 graines aléatoires, ce qui permet de comparer rapidement. La dernière ligne est
+mesurée sur le vrai budget de 55 secondes.
+
+\begin{table}[h]
+\centering
+\caption{Écart moyen au meilleur connu sur les 7 instances.}
+\label{tab:ablation}
+\begin{tabular}{lr}
+\toprule
+Configuration & Écart moyen\\
+\midrule
+Décodeur semi-actif, topologie globale (version de départ) & 22,3 \%\\
+Ancien décodeur \og GT \fg{} approximatif & 10,4 \%\\
+Nouveau décodeur Giffler-Thompson paramétré & 6,8 \%\\
+\quad + topologie en anneau & 6,4 \%\\
+\quad + redémarrage après 200 tours sans progrès & 5,9 \%\\
+\quad + voisinage de 2 et $\delta=0{,}2$ & 5,1 \%\\
+\quad + 12 essaims indépendants (un par cœur) & 4,7 \%\\
+\quad + migration du record toutes les 50 itérations & 4,2 \%\\
+\quad + essaims mixtes anneau / CLPSO & 3,8 \%\\
+\midrule
+\textbf{Configuration finale, 55 secondes} & \textbf{3,3 \%}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Résultats par instance}
+
+\begin{table}[h]
+\centering
+\caption{Version de départ (10 s, 1 essaim) contre version finale (55 s, 12 essaims).}
+\label{tab:instances}
+\begin{tabular}{llrrrr}
+\toprule
+Instance & Taille & Meilleur connu & Départ & Final & Makespan final\\
+\midrule
+abz5 (\texttt{10\_10}) & $10\times10$ & 1234 & 3,8 \% & 0,4 \% & 1239\\
+ft10 & $10\times10$ & 930  & 7,5 \%  & 2,0 \%  & 949\\
+la21 & $15\times10$ & 1046 & 9,4 \%  & 0,9 \%  & 1055\\
+la26 & $20\times10$ & 1218 & 8,4 \%  & \textbf{0,0 \%} & \textbf{1218}\\
+ta01 & $15\times15$ & 1231 & 10,4 \% & 4,1 \%  & 1282\\
+ta21 & $20\times20$ & 1644 & 14,7 \% & 5,2 \%  & 1729\\
+ta41 & $30\times20$ & 2018 & 18,5 \% & 10,7 \% & 2234\\
+\midrule
+\textbf{Moyenne} & & & \textbf{10,4 \%} & \textbf{3,3 \%} &\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Anneau contre CLPSO seuls (55 s, 1 essaim, moyenne de 3 graines) : des profils
+complémentaires, d'où le choix d'essaims mixtes.}
+\label{tab:ringcl}
+\begin{tabular}{lrrrrrrr}
+\toprule
+ & abz5 & ft10 & la21 & la26 & ta01 & ta21 & ta41\\
+\midrule
+Anneau + redémarrage & 0,41 & 2,15 & 2,96 & 0,93 & 4,93 & \textbf{6,97} & \textbf{12,09}\\
+CLPSO                & 0,49 & 2,15 & \textbf{1,15} & \textbf{0,00} & \textbf{4,01} & 7,89 & 14,87\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ce que nous avons appris}
+
+\begin{itemize}
+  \item \textbf{Le décodeur compte autant que l'essaim.} Changer de décodeur a fait plus
+        que tous les réglages d'essaim réunis : c'est lui qui définit l'espace où les
+        particules cherchent.
+  \item \textbf{La stagnation se combat par la diversité, pas par le temps.} Doubler le
+        temps de calcul n'a presque rien changé (5,17~\% $\to$ 5,09~\%), alors que les
+        topologies, les redémarrages et les essaims multiples ont fait gagner plusieurs
+        points.
+  \item \textbf{Il faut mesurer avant de garder une idée.} La relance autour du record
+        semblait prometteuse ; elle faisait moins bien qu'une relance aléatoire. Les petits
+        réglages (nombre de particules, inertie, \texttt{vmax}) donnaient des écarts plus
+        petits que le bruit de mesure ($\pm0{,}3$~\%).
+  \item \textbf{Limite.} Les très grandes instances restent difficiles (ta41 à 10,7~\%) :
+        avec 600 clés par particule, un PSO pur peine à explorer un espace aussi vaste en
+        une minute.
+\end{itemize}
+
+% =====================================================================
+\section{Utilisation}
+
+\paragraph{Compiler} (une fois, en mode optimisé) :
+\begin{lstlisting}[style=shell]
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+ctest --test-dir build --output-on-failure
+\end{lstlisting}
+
+\paragraph{Lancer une instance} avec les réglages par défaut, qui sont les meilleurs trouvés :
+\begin{lstlisting}[style=shell]
+./build/jsp_pso instances/abz5 --out resultats
+python3 tools/validate.py instances/abz5 resultats/abz5.json
+\end{lstlisting}
+
+\begin{table}[h]
+\centering
+\caption{Les options de la ligne de commande.}
+\small
+\begin{tabular}{>{\ttfamily}l l p{8.3cm}}
+\toprule
+\textrm{Option} & Défaut & Rôle\\
+\midrule
+-{}-time S       & 55     & budget en secondes (0 = sans limite)\\
+-{}-threads N    & 0      & nombre d'essaims, 0 = un par cœur\\
+-{}-topology     & mixed  & \texttt{ring}, \texttt{global}, \texttt{cl} (CLPSO) ou \texttt{mixed}\\
+-{}-neighbors K  & 2      & voisins de chaque côté dans l'anneau\\
+-{}-restart N    & 200    & tours sans progrès avant relance (0 = jamais)\\
+-{}-migrate N    & 50     & période de migration du record (0 = jamais)\\
+-{}-particles N  & 30     & particules par essaim\\
+-{}-vmax V       & 0,2    & vitesse maximale par dimension\\
+-{}-decoder      & gt     & \texttt{gt} (Giffler-Thompson) ou \texttt{semi} (semi-actif)\\
+-{}-delta D      & 0,2    & fenêtre du décodeur \texttt{gt}\\
+-{}-seed N       & 0      & graine du hasard\\
+-{}-out DIR      & .      & dossier du JSON de sortie\\
+-{}-target M     &        & s'arrêter dès qu'un makespan $\le M$ est trouvé\\
+-{}-log FICHIER  &        & écrire la courbe de convergence (CSV)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Tests automatiques.} \texttt{ctest} vérifie la lecture de l'exemple du cours et
+de huit fichiers volontairement défectueux, le décodage de l'ordre A (makespan 11),
+l'écriture du JSON, et que le PSO retrouve l'optimum 11 sur l'atelier $3\times3$. Une
+compilation avec \emph{sanitizers} (\texttt{-DJSP\_SANITIZE=ON}) détecte en plus les erreurs
+mémoire et les comportements indéfinis.
+
+\end{document}

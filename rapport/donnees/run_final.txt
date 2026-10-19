@@ -1,0 +1,21 @@
+[progression] temps_ms=0 makespan=1672 thread=0
+[progression] temps_ms=0 makespan=1514 thread=9
+[progression] temps_ms=0 makespan=1464 thread=2
+[progression] temps_ms=0 makespan=1436 thread=4
+[progression] temps_ms=0 makespan=1350 thread=3
+[progression] temps_ms=0 makespan=1345 thread=1
+[progression] temps_ms=0 makespan=1329 thread=10
+[progression] temps_ms=0 makespan=1320 thread=9
+[progression] temps_ms=1 makespan=1297 thread=10
+[progression] temps_ms=1 makespan=1286 thread=10
+[progression] temps_ms=3 makespan=1282 thread=10
+[progression] temps_ms=4 makespan=1274 thread=5
+[progression] temps_ms=7 makespan=1268 thread=10
+[progression] temps_ms=8 makespan=1267 thread=0
+[progression] temps_ms=15 makespan=1263 thread=10
+[progression] temps_ms=35 makespan=1252 thread=7
+[progression] temps_ms=109 makespan=1251 thread=8
+[progression] temps_ms=166 makespan=1242 thread=9
+[progression] temps_ms=248 makespan=1239 thread=9
+[fin] evaluations=64197570
+makespan=1239 temps_secondes=55.0009

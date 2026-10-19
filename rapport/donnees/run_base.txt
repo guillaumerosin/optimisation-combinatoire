@@ -1,0 +1,22 @@
+[progression] temps_ms=0 makespan=4668 thread=0
+[progression] temps_ms=0 makespan=1451 thread=0
+[progression] temps_ms=3 makespan=1428 thread=0
+[progression] temps_ms=9 makespan=1399 thread=0
+[progression] temps_ms=11 makespan=1393 thread=0
+[progression] temps_ms=12 makespan=1379 thread=0
+[progression] temps_ms=483 makespan=1373 thread=0
+[progression] temps_ms=510 makespan=1368 thread=0
+[progression] temps_ms=648 makespan=1362 thread=0
+[progression] temps_ms=910 makespan=1361 thread=0
+[progression] temps_ms=1383 makespan=1347 thread=0
+[progression] temps_ms=1390 makespan=1346 thread=0
+[progression] temps_ms=1702 makespan=1343 thread=0
+[progression] temps_ms=2192 makespan=1342 thread=0
+[progression] temps_ms=2217 makespan=1338 thread=0
+[progression] temps_ms=2657 makespan=1321 thread=0
+[progression] temps_ms=2937 makespan=1305 thread=0
+[progression] temps_ms=3250 makespan=1302 thread=0
+[progression] temps_ms=5420 makespan=1285 thread=0
+[progression] temps_ms=5425 makespan=1283 thread=0
+[fin] evaluations=10764150
+makespan=1283 temps_secondes=55.0004

@@ -12,7 +12,9 @@ int main(int argc, char** argv) {
     if (argc < 2) {
         std::cerr << "Usage: jsp_pso <instance> [--time S] [--seed N] "
                      "[--out DIR] [--threads N] [--decoder semi|gt] "
-                     "[--no-ls] [--no-pso] [--target M] [--log FILE]\n";
+                     "[--delta D] [--particles N] [--topology ring|global|cl|mixed] "
+                     "[--neighbors K] [--restart N] [--migrate N] [--vmax V] "
+                     "[--no-decreasing-inertia] [--target M] [--log FILE]\n";
         return 2;
     }
     try {
@@ -50,10 +52,20 @@ int main(int argc, char** argv) {
                 }
             } else if (argument == "--delta") {
                 options.delta = std::stod(next());
-            } else if (argument == "--no-ls") {
-                options.use_local_search = false;
-            } else if (argument == "--no-pso") {
-                options.use_pso = false;
+            } else if (argument == "--topology") {
+                options.topology = next();
+                if (options.topology != "ring" && options.topology != "global" &&
+                    options.topology != "cl" && options.topology != "mixed") {
+                    throw std::runtime_error("Topologie inconnue");
+                }
+            } else if (argument == "--neighbors") {
+                options.neighbors = std::stoi(next());
+            } else if (argument == "--restart") {
+                options.restart = std::stoi(next());
+            } else if (argument == "--migrate") {
+                options.migrate = std::stoi(next());
+            } else if (argument == "--vmax") {
+                options.max_velocity = std::stod(next());
             } else if (argument == "--no-decreasing-inertia") {
                 options.decreasing_inertia = false;
             } else if (argument == "--log") {
@@ -62,8 +74,9 @@ int main(int argc, char** argv) {
                 throw std::runtime_error("Option inconnue: " + argument);
             }
         }
-        if (options.threads <= 0 ||
-            options.particles <= 0) {
+        if (options.threads < 0 || options.particles <= 0 ||
+            options.neighbors < 0 || options.restart < 0 ||
+            options.migrate < 0 || options.max_velocity <= 0.0) {
             throw std::runtime_error("Les parametres numeriques doivent etre positifs");
         }
         const Instance instance = read_instance(input);

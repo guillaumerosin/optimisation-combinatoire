@@ -189,30 +189,6 @@ src/instance.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/jsp_core.dir/build.make CMakeFiles/jsp_core.dir/src/instance.cpp.s
 .PHONY : src/instance.cpp.s
 
-src/local_search.o: src/local_search.cpp.o
-.PHONY : src/local_search.o
-
-# target to build an object file
-src/local_search.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/jsp_core.dir/build.make CMakeFiles/jsp_core.dir/src/local_search.cpp.o
-.PHONY : src/local_search.cpp.o
-
-src/local_search.i: src/local_search.cpp.i
-.PHONY : src/local_search.i
-
-# target to preprocess a source file
-src/local_search.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/jsp_core.dir/build.make CMakeFiles/jsp_core.dir/src/local_search.cpp.i
-.PHONY : src/local_search.cpp.i
-
-src/local_search.s: src/local_search.cpp.s
-.PHONY : src/local_search.s
-
-# target to generate assembly for a file
-src/local_search.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/jsp_core.dir/build.make CMakeFiles/jsp_core.dir/src/local_search.cpp.s
-.PHONY : src/local_search.cpp.s
-
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -324,9 +300,6 @@ help:
 	@echo "... src/instance.o"
 	@echo "... src/instance.i"
 	@echo "... src/instance.s"
-	@echo "... src/local_search.o"
-	@echo "... src/local_search.i"
-	@echo "... src/local_search.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

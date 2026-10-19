@@ -12,7 +12,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_library(jsp_core
     src/instance.cpp
     src/schedule.cpp
-    src/local_search.cpp
     src/pso.cpp
 )
 target_include_directories(jsp_core PUBLIC src)

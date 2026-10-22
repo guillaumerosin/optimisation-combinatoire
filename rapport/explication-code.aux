@@ -1,0 +1,89 @@
+\relax 
+\providecommand\babel@aux[2]{}
+\@nameuse{bbl@beforestart}
+\catcode `:\active 
+\catcode `;\active 
+\catcode `!\active 
+\catcode `?\active 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\babel@aux{french}{}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Le problème : qui passe en premier sur la machine ?}{3}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}L'atelier}{3}{subsection.1.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces L'exemple des slides : 3 jobs, 3 machines (machine $\cdot $ durée).\relax }}{3}{table.caption.2}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{tab:recettes}{{1}{3}{L'exemple des slides : 3 jobs, 3 machines (machine $\cdot $ durée).\relax }{table.caption.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Même atelier, deux ordres, deux résultats}{3}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Pourquoi une métaheuristique ?}{3}{subsection.1.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Les mêmes recettes avec deux ordres de placement. Dans l'ordre B, $J_0$ passe en premier sur M1 : $J_1$ doit attendre jusqu'à 5 et tout le reste glisse (\emph  {effet domino}). Le makespan passe de 11 à 14.\relax }}{4}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:gantt-ab}{{1}{4}{Les mêmes recettes avec deux ordres de placement. Dans l'ordre B, $J_0$ passe en premier sur M1 : $J_1$ doit attendre jusqu'à 5 et tout le reste glisse (\emph {effet domino}). Le makespan passe de 11 à 14.\relax }{figure.caption.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Vue d'ensemble du programme}{4}{section.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Le trajet des données dans le programme.\relax }}{4}{figure.caption.4}\protected@file@percent }
+\newlabel{fig:archi}{{2}{4}{Le trajet des données dans le programme.\relax }{figure.caption.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Les fichiers du projet.\relax }}{4}{table.caption.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Lire l'instance (\texttt  {instance.cpp})}{5}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Dans le code}{5}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Représenter une solution : les clés aléatoires}{7}{section.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Une particule qui code l'ordre A. Trier les clés redonne la séquence $J_1, J_0, J_2, J_2, J_0, J_1, J_1, J_2, J_0$, donc le planning de makespan 11.\relax }}{7}{table.caption.6}\protected@file@percent }
+\newlabel{tab:cles}{{3}{7}{Une particule qui code l'ordre A. Trier les clés redonne la séquence $J_1, J_0, J_2, J_2, J_0, J_1, J_1, J_2, J_0$, donc le planning de makespan 11.\relax }{table.caption.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Décoder une particule (\texttt  {schedule.cpp})}{8}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Le décodeur semi-actif}{8}{subsection.5.1}\protected@file@percent }
+\newlabel{sec:semi}{{5.1}{8}{Le décodeur semi-actif}{subsection.5.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Le décodeur Giffler-Thompson paramétré (par défaut)}{8}{subsection.5.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Étape 2 du décodage de l'atelier $3\times 3$ : J0 et J2 veulent tous deux la machine M0. La fenêtre réglée par $\delta $ fixe qui est candidat. Avec $\delta =1$, les deux sont candidats et c'est la clé de la particule qui tranche ; avec $\delta =0{,}2$, seul J0 peut commencer assez tôt (J2 ne commence qu'à $2 > 0{,}6$).\relax }}{9}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:fenetre}{{3}{9}{Étape 2 du décodage de l'atelier $3\times 3$ : J0 et J2 veulent tous deux la machine M0. La fenêtre réglée par $\delta $ fixe qui est candidat. Avec $\delta =1$, les deux sont candidats et c'est la clé de la particule qui tranche ; avec $\delta =0{,}2$, seul J0 peut commencer assez tôt (J2 ne commence qu'à $2 > 0{,}6$).\relax }{figure.caption.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Déroulé complet du décodeur ($\delta =0{,}2$) sur l'atelier $3\times 3$. Chaque case de candidat donne la machine et l'intervalle début--fin au plus tôt.\relax }}{9}{table.caption.8}\protected@file@percent }
+\newlabel{tab:trace}{{4}{9}{Déroulé complet du décodeur ($\delta =0{,}2$) sur l'atelier $3\times 3$. Chaque case de candidat donne la machine et l'intervalle début--fin au plus tôt.\relax }{table.caption.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{Vitesse.}{11}{section*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}L'essaim particulaire (\texttt  {pso.cpp})}{12}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Le principe}{12}{subsection.6.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces La nouvelle vitesse est la somme de trois tendances : continuer sur sa lancée, revenir vers son meilleur souvenir, et aller vers le meilleur de ses voisins.\relax }}{13}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:vitesse}{{4}{13}{La nouvelle vitesse est la somme de trois tendances : continuer sur sa lancée, revenir vers son meilleur souvenir, et aller vers le meilleur de ses voisins.\relax }{figure.caption.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Les réglages retenus}{13}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}La boucle principale}{15}{subsection.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Empêcher l'essaim de stagner}{15}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}La topologie en anneau}{15}{subsection.7.1}\protected@file@percent }
+\newlabel{sec:anneau}{{7.1}{15}{La topologie en anneau}{subsection.7.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Les trois façons de choisir le guide social d'une particule.\relax }}{16}{figure.caption.12}\protected@file@percent }
+\newlabel{fig:topologies}{{5}{16}{Les trois façons de choisir le guide social d'une particule.\relax }{figure.caption.12}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Le redémarrage partiel}{16}{subsection.7.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}CLPSO : l'apprentissage global}{17}{subsection.7.3}\protected@file@percent }
+\newlabel{sec:clpso}{{7.3}{17}{CLPSO : l'apprentissage global}{subsection.7.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Le multi-essaims hétérogène}{19}{subsection.7.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Les essaims tournent en parallèle et ne partagent que le record. Toutes les 50 itérations (\texttt  {-{}-migrate}), la pire particule de chaque essaim adopte la position du record global.\relax }}{19}{figure.caption.13}\protected@file@percent }
+\newlabel{fig:multi}{{6}{19}{Les essaims tournent en parallèle et ne partagent que le record. Toutes les 50 itérations (\texttt {-{}-migrate}), la pire particule de chaque essaim adopte la position du record global.\relax }{figure.caption.13}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Parallélisme et fiabilité}{20}{section.8}\protected@file@percent }
+\newlabel{sec:parallele}{{8}{20}{Parallélisme et fiabilité}{section.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{Le format de sortie.}{22}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Résultats}{23}{section.9}\protected@file@percent }
+\newlabel{sec:resultats}{{9}{23}{Résultats}{section.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}Convergence sur l'instance des slides}{23}{subsection.9.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Évolution du meilleur makespan sur abz5 (l'instance \texttt  {10\_10} des slides), en 55 secondes. Chaque marche est un nouveau record. Le PSO de base trouve son dernier record (1283, soit 4,0~\% au-dessus de l'optimum) après 5,4~s puis n'avance plus. Le PSO final atteint 1239 (0,4~\%) dès 0,25~s : sur une instance de cette taille, ses 12 essaims trouvent très vite un planning proche de l'optimum, puis plafonnent eux aussi.\relax }}{23}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:convergence}{{7}{23}{Évolution du meilleur makespan sur abz5 (l'instance \texttt {10\_10} des slides), en 55 secondes. Chaque marche est un nouveau record. Le PSO de base trouve son dernier record (1283, soit 4,0~\% au-dessus de l'optimum) après 5,4~s puis n'avance plus. Le PSO final atteint 1239 (0,4~\%) dès 0,25~s : sur une instance de cette taille, ses 12 essaims trouvent très vite un planning proche de l'optimum, puis plafonnent eux aussi.\relax }{figure.caption.15}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.2}Ce qu'apporte chaque mécanisme}{24}{subsection.9.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Écart moyen au meilleur connu sur les 7 instances.\relax }}{24}{table.caption.16}\protected@file@percent }
+\newlabel{tab:ablation}{{5}{24}{Écart moyen au meilleur connu sur les 7 instances.\relax }{table.caption.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3}Résultats par instance}{24}{subsection.9.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Version de départ (10 s, 1 essaim) contre version finale (55 s, 12 essaims).\relax }}{24}{table.caption.17}\protected@file@percent }
+\newlabel{tab:instances}{{6}{24}{Version de départ (10 s, 1 essaim) contre version finale (55 s, 12 essaims).\relax }{table.caption.17}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Anneau contre CLPSO seuls (55 s, 1 essaim, moyenne de 3 graines) : des profils complémentaires, d'où le choix d'essaims mixtes.\relax }}{24}{table.caption.18}\protected@file@percent }
+\newlabel{tab:ringcl}{{7}{24}{Anneau contre CLPSO seuls (55 s, 1 essaim, moyenne de 3 graines) : des profils complémentaires, d'où le choix d'essaims mixtes.\relax }{table.caption.18}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.4}Ce que nous avons appris}{24}{subsection.9.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {10}Utilisation}{25}{section.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Compiler}{25}{section*.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Lancer une instance}{25}{section*.20}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Les options de la ligne de commande.\relax }}{25}{table.caption.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Tests automatiques.}{25}{section*.22}\protected@file@percent }
+\gdef \@abspage@last{25}

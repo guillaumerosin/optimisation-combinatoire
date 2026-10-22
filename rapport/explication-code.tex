@@ -49,6 +49,29 @@
   keepspaces=true}
 \lstdefinestyle{json}{basicstyle=\footnotesize\ttfamily,columns=fullflexible,
   backgroundcolor=\color{fond},frame=none,xleftmargin=6pt,keepspaces=true}
+\lstdefinestyle{cpp}{language=C++,basicstyle=\footnotesize\ttfamily,
+  columns=fullflexible,keepspaces=true,showstringspaces=false,
+  keywordstyle=\bfseries\color{jzero},commentstyle=\itshape\color{jdeux!80!black},
+  stringstyle=\color{jun!85!black},
+  morekeywords={thread_local,nullptr,size_t,auto,constexpr},
+  numbers=left,numberstyle=\tiny\color{gris},numbersep=7pt,
+  xleftmargin=20pt,framexleftmargin=16pt,frame=l,rulecolor=\color{jzero!50},
+  framerule=1.2pt,backgroundcolor=\color{fond},
+  breaklines=true,breakatwhitespace=true,
+  postbreak=\mbox{\textcolor{gris}{$\hookrightarrow$}\space},
+  aboveskip=8pt,belowskip=6pt,
+  captionpos=t,abovecaptionskip=3pt}
+% Extrait reel du code source : \code{fichier}{premiere}{derniere}{titre}
+% Les numeros affiches sont ceux du fichier (version du 19 octobre 2026).
+\newcommand{\code}[4]{%
+  \needspace{10\baselineskip}%
+  \lstinputlisting[style=cpp,firstline=#2,lastline=#3,firstnumber=#2,
+    title={\small\textbf{\texttt{\detokenize{#1}}}, lignes #2 à #3 --- #4}]{../#1}}
+% Renvoi vers une ligne de l'extrait
+\newcommand{\li}[1]{\textcolor{jzero}{\textbf{l.\,#1}}}
+\newenvironment{lignes}{\begin{description}[style=multiline,leftmargin=2.1cm,font=\normalfont,itemsep=2pt]\small}{\end{description}}
+\usepackage{enumitem}
+\usepackage{needspace}
 
 % ---------- Diagramme de Gantt pour l'atelier 3 x 3 ----------
 % \op{machine}{debut}{fin}{couleur}{etiquette}
@@ -253,6 +276,39 @@ concours coûterait une instance entière :
   \item des lignes en trop après le dernier job déclenchent seulement un avertissement.
 \end{itemize}
 
+\subsection{Dans le code}
+
+\code{src/instance.hpp}{6}{16}{la structure qui représente l'atelier}
+\begin{lignes}
+  \item[\li{6--9}] une \texttt{Operation} = une étape de recette : sur quelle machine, pendant combien de temps.
+  \item[\li{15}] \texttt{operations[job][étape]} : un tableau de recettes. Pour l'exemple $3\times3$,
+        \texttt{operations[1][0]} vaut \texttt{\{machine 1, durée 4\}} (première étape du job 1).
+\end{lignes}
+
+\code{src/instance.cpp}{33}{61}{nettoyer le fichier et trouver le nom}
+\begin{lignes}
+  \item[\li{37--41}] on lit tout le fichier ligne par ligne, et on ne garde que les lignes utiles
+        (la fonction \texttt{is\_comment\_or\_empty} écarte les lignes vides et celles qui
+        commencent par \texttt{\#}).
+  \item[\li{51--55}] on essaie de lire deux entiers sur la première ligne. Si elle ne contient
+        \emph{que} deux entiers, c'est déjà la ligne des dimensions : le fichier n'a pas de nom.
+  \item[\li{56}] dans ce cas, le nom est celui du fichier sans extension (\texttt{stem}) :
+        \texttt{instances/abz5} donnera \texttt{abz5.json}.
+  \item[\li{58--59}] sinon, la première ligne est le nom (\texttt{trim} retire les espaces et le
+        \texttt{\textbackslash r} Windows), et on passe à la ligne suivante.
+\end{lignes}
+
+\code{src/instance.cpp}{75}{105}{lire chaque recette et la vérifier}
+\begin{lignes}
+  \item[\li{75}] une ligne par job.
+  \item[\li{81--82}] \texttt{machine\_used} retient les machines déjà vues dans cette recette.
+  \item[\li{85--90}] on lit un couple \texttt{machine durée}. Si la lecture échoue (pas assez de
+        nombres, ou pas un nombre) ou si la machine n'existe pas, on arrête avec un message clair.
+  \item[\li{92--96}] un job ne peut pas passer deux fois par la même machine.
+  \item[\li{98}] l'étape est ajoutée à la recette du job.
+  \item[\li{100--104}] s'il reste des nombres sur la ligne, elle est trop longue : erreur.
+\end{lignes}
+
 % =====================================================================
 \section{Représenter une solution : les clés aléatoires}
 
@@ -291,6 +347,18 @@ L'intérêt est double : \emph{n'importe quelle} liste de nombres donne un plann
 (les contraintes sont garanties par le décodeur), et l'on peut appliquer telles quelles
 les formules continues du PSO.
 
+\code{src/pso.cpp}{29}{45}{des clés à la séquence de jobs (décodeur \og semi \fg{})}
+\begin{lignes}
+  \item[\li{33--36}] \texttt{indices} = $0, 1, \dots, D-1$ : un numéro par opération.
+  \item[\li{37--38}] on trie ces numéros \emph{selon la valeur de leur clé}. Sur la
+        table~\ref{tab:cles}, on obtient $3, 0, 6, 7, 1, 4, 5, 8, 2$ (la clé 0,05 de l'indice 3
+        est la plus petite, etc.). \texttt{stable\_sort} garde l'ordre des indices en cas
+        d'égalité, pour que le résultat soit toujours le même.
+  \item[\li{41--43}] chaque indice divisé par $m$ (division entière) donne son job :
+        $3/3=1$, $0/3=0$, $6/3=2$\dots{} On retrouve la séquence
+        $1, 0, 2, 2, 0, 1, 1, 2, 0$ de l'ordre A.
+\end{lignes}
+
 % =====================================================================
 \section{Décoder une particule (\texttt{schedule.cpp})}
 
@@ -312,6 +380,18 @@ pour chaque job j dans la séquence faire
 retourner le plus grand fin   $\triangleright$ le makespan
 \end{lstlisting}
 \end{pseudo}
+
+\code{src/schedule.cpp}{20}{38}{le décodeur semi-actif}
+\begin{lignes}
+  \item[\li{20--22}] trois compteurs : la prochaine étape de chaque job, la date où chaque job
+        est prêt, la date où chaque machine se libère. Tout commence à 0.
+  \item[\li{27--28}] \texttt{next[job]++} donne l'étape à placer \emph{puis} passe à la
+        suivante ; \texttt{task} est cette étape (machine et durée).
+  \item[\li{31}] c'est exactement l'encadré
+        \texttt{début = max(job prêt, machine libre)} de la section 1.
+  \item[\li{34--35}] le job et la machine sont tous deux occupés jusqu'à \texttt{end}.
+  \item[\li{36}] le makespan est la plus grande date de fin rencontrée.
+\end{lignes}
 
 Son défaut : il ne remplit jamais un \og trou \fg{} laissé sur une machine. Beaucoup de
 particules différentes donnent de mauvais plannings, et l'essaim perd son temps.
@@ -399,12 +479,69 @@ l'ordre A de la figure~\ref{fig:gantt-ab}. Sur une vraie instance $10\times10$, 
 conflits à plusieurs candidats sont nombreux, et ce sont eux que l'essaim apprend à
 trancher.
 
+\subsubsection*{Dans le code}
+
+La boucle principale de \texttt{decode\_active} fait une opération par tour
+(\li{70} : $n\times m$ tours en tout). Chaque tour se lit en trois temps, qui
+correspondent aux colonnes de la table~\ref{tab:trace}.
+
+\code{src/schedule.cpp}{74}{89}{temps 1 : trouver $\varphi$, $M^*$ et les $\sigma$}
+\begin{lignes}
+  \item[\li{74--75}] on remet à \og l'infini \fg{} le plus petit début connu de chaque machine.
+  \item[\li{78--80}] on parcourt les jobs ; \texttt{current\_machine[job]} vaut $-1$ quand le
+        job est terminé, on le saute.
+  \item[\li{81}] début au plus tôt de la prochaine étape du job : toujours le même
+        \texttt{max(job prêt, machine libre)}.
+  \item[\li{83}] on retient au passage le plus petit début sur chaque machine : ce sera
+        $\sigma$ pour la machine du conflit.
+  \item[\li{84--88}] on cherche la plus petite date de fin : c'est $\varphi$, et sa machine
+        devient \texttt{conflict\_machine} ($M^*$). Au pas 1 du 3$\times$3, c'est J2 sur M2 qui
+        finit le plus tôt (2), donc $\varphi=2$ et $M^*=$ M2.
+\end{lignes}
+
+\code{src/schedule.cpp}{90}{106}{temps 2 : la fenêtre et le choix de la particule}
+\begin{lignes}
+  \item[\li{92--93}] la fenêtre $[\sigma,\ \sigma+\delta(\varphi-\sigma)]$ : \texttt{limit}
+        en est la borne droite. Au pas 2 : $\sigma=0$, $\varphi=3$, $\delta=0{,}2$, donc
+        \texttt{limit} $=0{,}6$.
+  \item[\li{97--100}] on écarte les jobs qui ne veulent pas $M^*$, ou qui ne peuvent pas
+        commencer dans la fenêtre (au pas 2, J2 commence à $2 > 0{,}6$ : il est écarté).
+  \item[\li{101}] la clé de la particule pour \emph{cette} opération : indice
+        \texttt{job * machines + next[job]}, comme dans la table~\ref{tab:cles}.
+  \item[\li{102--105}] parmi les candidats, la plus petite clé gagne. \textbf{C'est la seule
+        ligne où la particule influence le planning.}
+\end{lignes}
+
+\code{src/schedule.cpp}{107}{115}{temps 3 : placer l'opération choisie}
+\begin{lignes}
+  \item[\li{107--109}] l'opération choisie commence à son début au plus tôt ; on calcule sa fin.
+  \item[\li{110}] si l'appelant veut le planning complet (nouveau record), on note la date de début.
+  \item[\li{111--112}] le job et la machine sont occupés jusqu'à cette fin.
+  \item[\li{113--114}] le job passe à sa machine suivante, ou à $-1$ s'il a fini sa recette.
+\end{lignes}
+
 \paragraph{Vitesse.} Le décodeur est appelé des millions de fois. Ses tableaux de
 travail sont réutilisés d'un appel à l'autre (\texttt{thread\_local}) et il ne fait que
 deux passes sur les jobs par opération placée. Il ne construit le planning complet
 (\texttt{schedule\_from\_starts}) que lorsqu'un nouveau record est trouvé. Résultat :
 environ $170\,000$ évaluations par seconde sur un $10\times10$, et $46\,\mu$s par
 évaluation sur un $30\times20$.
+
+\code{src/schedule.cpp}{53}{59}{des tableaux de travail réutilisés}
+\begin{lignes}
+  \item[\li{53--59}] \texttt{thread\_local} : chaque thread garde ses propres tableaux d'un
+        appel à l'autre. On évite ainsi de réserver de la mémoire des millions de fois, sans
+        que deux essaims parallèles écrivent dans les mêmes tableaux.
+\end{lignes}
+
+\code{src/pso.cpp}{49}{63}{évaluer une particule}
+\begin{lignes}
+  \item[\li{51--57}] avec \texttt{-{}-decoder semi}, on trie les clés puis on applique le
+        décodeur semi-actif.
+  \item[\li{58}] cas le plus fréquent : on ne veut que le makespan, sans construire le planning.
+  \item[\li{59--61}] pour un nouveau record seulement, on récupère les dates de début et on
+        construit le planning complet qui ira dans le JSON.
+\end{lignes}
 
 % =====================================================================
 \section{L'essaim particulaire (\texttt{pso.cpp})}
@@ -430,6 +567,26 @@ v_{i,d} \leftarrow \underbrace{w\,v_{i,d}}_{\text{inertie}}
 x_{i,d} \leftarrow x_{i,d} + v_{i,d}
 \]
 où $r_1, r_2$ sont tirés au hasard dans $[0,1]$ à chaque fois.
+
+\code{src/pso.cpp}{18}{27}{une particule en mémoire}
+\begin{lignes}
+  \item[\li{19--21}] $x_i$, $v_i$ et $p_i$ : trois listes de $D$ nombres.
+  \item[\li{22}] le makespan de $p_i$, pour ne pas le recalculer.
+  \item[\li{25--26}] utilisés seulement par la variante CLPSO (section~\ref{sec:clpso}).
+\end{lignes}
+
+\code{src/pso.cpp}{310}{324}{la formule du PSO, telle qu'elle est codée}
+\begin{lignes}
+  \item[\li{310--311}] \texttt{social} est $g_i$, le meilleur souvenir du guide de la
+        particule (choisi par la topologie, section~\ref{sec:anneau}).
+  \item[\li{314}] la mise à jour se fait dimension par dimension (\texttt{key} $= d$).
+  \item[\li{315}] $w\,v_{i,d}$ : l'inertie.
+  \item[\li{316--318}] $c_1 r_1 (p_{i,d}-x_{i,d})$ : la mémoire. \texttt{unit(random)} tire
+        un nouveau $r_1$ dans $[0,1]$ pour chaque dimension.
+  \item[\li{319--320}] $c_2 r_2 (g_{i,d}-x_{i,d})$ : l'influence sociale.
+  \item[\li{321}] la vitesse est bornée à $\pm$\texttt{vmax}.
+  \item[\li{322--323}] on mémorise la vitesse et on déplace la particule.
+\end{lignes}
 
 \begin{figure}[h]
 \centering
@@ -476,6 +633,38 @@ revenir vers son meilleur souvenir, et aller vers le meilleur de ses voisins.}
         autres partent au hasard.
 \end{itemize}
 
+\code{src/pso.cpp}{285}{290}{l'inertie décroissante}
+\begin{lignes}
+  \item[\li{287--288}] \texttt{ratio} va de 0 (début) à 1 (fin du budget).
+  \item[\li{289--290}] $w = 0{,}9 - 0{,}5\times$\texttt{ratio} : 0,9 au départ, 0,4 à la fin.
+        Avec \texttt{-{}-no-decreasing-inertia}, $w$ reste à 0,7298.
+\end{lignes}
+
+\code{src/pso.cpp}{179}{189}{tirer une particule au hasard}
+\begin{lignes}
+  \item[\li{181}] chaque clé est tirée uniformément dans $[0,1]$.
+  \item[\li{182}] chaque vitesse est tirée dans $[-\texttt{vmax}, \texttt{vmax}]$.
+  \item[\li{184--186}] au départ, le meilleur souvenir est la position elle-même.
+  \item[\li{187--188}] remise à zéro de l'état CLPSO (utile après un redémarrage).
+\end{lignes}
+
+\code{src/pso.cpp}{72}{89}{les règles de priorité du départ}
+\begin{lignes}
+  \item[\li{73}] SPT : on préfère l'opération la plus courte (score $= -$durée, le plus grand score gagne).
+  \item[\li{74--79}] MWKR additionne les durées restantes du job ; MOPNR compte les étapes restantes.
+  \item[\li{81--89}] on construit une séquence en prenant à chaque pas le job au meilleur score.
+        Les lignes 90 à 97 transforment cette séquence en clés (le rang divisé par $D$).
+\end{lignes}
+
+\code{src/pso.cpp}{226}{240}{créer l'essaim}
+\begin{lignes}
+  \item[\li{230}] toutes les particules sont d'abord tirées au hasard.
+  \item[\li{233--238}] dans le premier essaim seulement, les particules 0, 1 et 2 sont
+        remplacées par SPT, MWKR et MOPNR. Les autres essaims restent entièrement aléatoires,
+        pour être plus divers.
+  \item[\li{239}] chaque particule propose son planning comme record global.
+\end{lignes}
+
 \subsection{La boucle principale}
 
 \begin{pseudo}{Un essaim (un thread)}
@@ -492,6 +681,20 @@ tant que le temps n'est pas écoulé faire
     tous les 50 tours : la pire particule adopte le record global (migration)
 \end{lstlisting}
 \end{pseudo}
+
+Les lignes 282 à 376 de \texttt{pso.cpp} codent cette boucle. La mise à jour des vitesses
+(lignes 7--8 du pseudo-code) a été montrée plus haut ; voici l'évaluation et la mémoire
+(lignes 9--10).
+
+\code{src/pso.cpp}{326}{339}{évaluer la nouvelle position et mettre à jour pbest}
+\begin{lignes}
+  \item[\li{326--327}] la nouvelle position est décodée en planning ; on récupère son makespan.
+  \item[\li{328--332}] \texttt{stale} compte les tours sans amélioration stricte (pour CLPSO).
+  \item[\li{335}] \texttt{<=} et non \texttt{<} : à makespan égal, la particule accepte quand
+        même sa nouvelle position comme meilleur souvenir. Elle peut ainsi avancer sur un plateau.
+  \item[\li{338}] si c'est mieux que le record de tous les essaims, \texttt{publish} l'enregistre
+        (section~\ref{sec:parallele}).
+\end{lignes}
 
 % =====================================================================
 \section{Empêcher l'essaim de stagner}
@@ -539,12 +742,22 @@ Quatre mécanismes combattent ce phénomène. Ils restent tous des mécanismes d
 \label{fig:topologies}
 \end{figure}
 
-\subsection{La topologie en anneau}
+\subsection{La topologie en anneau}\label{sec:anneau}
 
 Les particules sont disposées en cercle. Le guide social de chacune est le meilleur
 souvenir parmi elle-même et ses $k=2$ voisins de chaque côté (\texttt{-{}-neighbors}). Un
 bon planning se propage donc de proche en proche au lieu de contaminer tout l'essaim
 d'un coup : plusieurs zones de l'espace restent explorées en parallèle plus longtemps.
+
+\code{src/pso.cpp}{245}{271}{calculer le guide de chaque particule}
+\begin{lignes}
+  \item[\li{246--251}] on repère la meilleure particule de l'essaim (\texttt{best}).
+  \item[\li{253--256}] topologie globale : tout le monde a \texttt{best} pour guide.
+  \item[\li{259--267}] anneau : on regarde les particules de \texttt{index - k} à
+        \texttt{index + k} et on garde celle qui a le meilleur souvenir.
+  \item[\li{262}] le modulo referme le cercle : avec 30 particules, les voisines de la
+        particule 0 sont 28, 29, 1 et 2.
+\end{lignes}
 
 \subsection{Le redémarrage partiel}
 
@@ -553,11 +766,25 @@ l'essaim a convergé. On garde sa meilleure particule et on relance toutes les a
 hasard, avec de nouvelles vitesses. Elles repartent explorer d'autres zones, et le
 meilleur planning n'est jamais perdu.
 
+\code{src/pso.cpp}{342}{348}{mesurer la stagnation}
+\begin{lignes}
+  \item[\li{343--345}] le meilleur de l'essaim a progressé : le compteur repart à zéro.
+  \item[\li{347}] sinon, un tour de plus sans progrès.
+\end{lignes}
+
+\code{src/pso.cpp}{365}{375}{le redémarrage partiel}
+\begin{lignes}
+  \item[\li{366--367}] seulement pour les essaims en anneau, après \texttt{restart} = 200 tours
+        sans progrès.
+  \item[\li{370}] \texttt{keep} est la meilleure particule de l'essaim.
+  \item[\li{371--373}] toutes les autres sont retirées au hasard avec \texttt{randomize}.
+\end{lignes}
+
 Nous avons aussi essayé de relancer les particules \emph{autour} de la meilleure
 (position du record plus un bruit gaussien). C'était moins bon : l'essaim a besoin de vraie
 diversité, pas d'une variation sur le même thème.
 
-\subsection{CLPSO : l'apprentissage global}
+\subsection{CLPSO : l'apprentissage global}\label{sec:clpso}
 
 Dans le PSO à apprentissage global (\emph{Comprehensive Learning PSO}, Liang \emph{et al.},
 2006), une particule n'a plus de guide unique. Pour \textbf{chaque dimension} $d$, elle
@@ -573,6 +800,28 @@ Les exemples sont tirés à nouveau quand la particule ne progresse plus pendant
 Comme chaque particule mélange des morceaux de plusieurs autres, l'essaim ne converge
 jamais d'un bloc. C'est plus lent, mais cela explore beaucoup mieux. CLPSO entretient
 lui-même sa diversité : on ne le redémarre pas.
+
+\code{src/pso.cpp}{195}{224}{choisir les exemples d'une particule}
+\begin{lignes}
+  \item[\li{197--199}] la probabilité d'apprentissage $P_c(i)$ : 0,05 pour la première
+        particule, 0,5 pour la dernière. Certaines particules restent fidèles à elles-mêmes,
+        d'autres empruntent beaucoup.
+  \item[\li{201--210}] le tournoi : deux autres particules tirées au hasard, on garde celle
+        qui a le meilleur souvenir.
+  \item[\li{211}] par défaut, chaque dimension apprend de la particule elle-même.
+  \item[\li{213--218}] pour chaque dimension, avec la probabilité $P_c(i)$, l'exemple devient
+        le gagnant d'un tournoi.
+  \item[\li{219--222}] si aucune dimension n'a été tirée, on en force une : la particule doit
+        apprendre de quelqu'un.
+\end{lignes}
+
+\code{src/pso.cpp}{295}{308}{la mise à jour CLPSO}
+\begin{lignes}
+  \item[\li{296--298}] on retire les exemples quand la particule stagne depuis 7 tours.
+  \item[\li{300--301}] la cible de la dimension \texttt{key} est le meilleur souvenir de
+        \emph{son} exemple : des dimensions différentes suivent des particules différentes.
+  \item[\li{302--304}] un seul terme d'attraction au lieu de deux, avec $c=1{,}49445$.
+\end{lignes}
 
 \subsection{Le multi-essaims hétérogène}
 
@@ -606,8 +855,33 @@ du record global.}
 \label{fig:multi}
 \end{figure}
 
+\code{src/pso.cpp}{277}{281}{quelle variante pour quel essaim ?}
+\begin{lignes}
+  \item[\li{280--281}] en mode \texttt{mixed}, les essaims de numéro impair (1, 3, 5\dots)
+        tournent en CLPSO, les essaims pairs en anneau.
+\end{lignes}
+
+\code{src/pso.cpp}{350}{363}{la migration}
+\begin{lignes}
+  \item[\li{350--351}] tous les 50 tours, et seulement si un autre essaim a fait mieux que celui-ci.
+  \item[\li{353--358}] on cherche la pire particule de l'essaim.
+  \item[\li{359}] on verrouille le record global pendant qu'on le copie (un autre thread
+        pourrait le modifier au même moment).
+  \item[\li{360--362}] la pire particule prend la position et le makespan du record : elle va
+        attirer ses voisines vers cette zone.
+\end{lignes}
+
+\code{src/pso.cpp}{378}{388}{lancer les essaims en parallèle}
+\begin{lignes}
+  \item[\li{380--381}] \texttt{-{}-threads 0} : autant d'essaims que de cœurs
+        (\texttt{hardware\_concurrency}).
+  \item[\li{383--385}] chaque thread exécute la fonction \texttt{worker}, c'est-à-dire un
+        essaim complet, avec son numéro.
+  \item[\li{386--388}] on attend que tous les essaims aient fini (fin du budget).
+\end{lignes}
+
 % =====================================================================
-\section{Parallélisme et fiabilité}
+\section{Parallélisme et fiabilité}\label{sec:parallele}
 
 \begin{itemize}
   \item \textbf{Partage du record.} Le makespan du record est un \texttt{std::atomic}, lu
@@ -625,6 +899,43 @@ du record global.}
   \item \textbf{Vérification.} \texttt{tools/validate.py} relit l'instance et le JSON, et
         contrôle les trois contraintes et le makespan, indépendamment du code C++.
 \end{itemize}
+
+\code{src/pso.cpp}{146}{163}{publier un nouveau record}
+\begin{lignes}
+  \item[\li{148}] test rapide sans verrou : si ce n'est pas mieux que le record, on s'arrête
+        tout de suite. C'est le cas de presque toutes les évaluations.
+  \item[\li{149--150}] sinon, on verrouille et on revérifie : entre-temps, un autre thread a
+        peut-être trouvé mieux.
+  \item[\li{151--153}] on construit le planning complet et on met à jour le record.
+  \item[\li{154--156}] la ligne \texttt{[progression]} affichée dans le terminal.
+  \item[\li{157--158}] sauvegarde du JSON et de la courbe de convergence (\texttt{-{}-log}).
+  \item[\li{159--161}] avec \texttt{-{}-target}, on prévient tous les threads qu'ils peuvent s'arrêter.
+\end{lignes}
+
+\code{src/pso.cpp}{119}{125}{l'échéance}
+\begin{lignes}
+  \item[\li{119}] l'heure de départ, lue sur l'horloge monotone \texttt{steady\_clock}.
+  \item[\li{122--125}] l'échéance = départ + \texttt{-{}-time} secondes ; avec
+        \texttt{-{}-time 0}, il n'y a pas d'échéance. Chaque essaim teste
+        \texttt{Clock::now() < deadline} à chaque tour (ligne 282).
+\end{lignes}
+
+\code{src/pso.cpp}{101}{115}{sauvegarder sans ralentir}
+\begin{lignes}
+  \item[\li{107--109}] si la dernière écriture date de moins de 2 secondes, on n'écrit pas
+        (sauf \texttt{force}, utilisé à la toute fin).
+  \item[\li{110--113}] le fichier s'appelle \texttt{<nom de l'instance>.json}, dans le dossier
+        \texttt{-{}-out}, qui est créé s'il n'existe pas.
+\end{lignes}
+
+\code{src/main.cpp}{82}{92}{le programme principal}
+\begin{lignes}
+  \item[\li{82}] lecture de l'instance (section 3).
+  \item[\li{84}] tout le travail : les essaims tournent jusqu'à l'échéance.
+  \item[\li{87--88}] la ligne finale \texttt{makespan=\dots{} temps\_secondes=\dots}.
+  \item[\li{89--91}] toute erreur (fichier introuvable, instance mal formée, option inconnue)
+        est affichée proprement et le programme renvoie le code 1.
+\end{lignes}
 
 \paragraph{Le format de sortie.} Pour l'atelier $3\times3$ avec l'ordre A :
 \begin{lstlisting}[style=json]
@@ -644,6 +955,14 @@ du record global.}
 }
 \end{lstlisting}
 
+\code{src/schedule.cpp}{143}{160}{écrire ce JSON}
+\begin{lignes}
+  \item[\li{143--144}] l'en-tête avec le makespan.
+  \item[\li{145--146}] une entrée \texttt{"Job\_0"}, \texttt{"Job\_1"}\dots{} par job.
+  \item[\li{151--156}] chaque étape devient \texttt{\{"machine", "start", "end"\}}, séparées par des virgules.
+  \item[\li{158}] pas de virgule après le dernier job, sinon le JSON serait invalide.
+\end{lignes}
+
 % =====================================================================
 \section{Résultats}
 \label{sec:resultats}
@@ -657,7 +976,7 @@ l'\textbf{écart} au meilleur connu :
 
 \subsection{Convergence sur l'instance des slides}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=0.92\textwidth,height=6.2cm,

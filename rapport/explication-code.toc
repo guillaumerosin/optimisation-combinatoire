@@ -1,0 +1,33 @@
+\babel@toc {french}{}\relax 
+\contentsline {section}{\numberline {1}Le problème : qui passe en premier sur la machine ?}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}L'atelier}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Même atelier, deux ordres, deux résultats}{3}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Pourquoi une métaheuristique ?}{3}{subsection.1.3}%
+\contentsline {section}{\numberline {2}Vue d'ensemble du programme}{4}{section.2}%
+\contentsline {section}{\numberline {3}Lire l'instance (\texttt {instance.cpp})}{5}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Dans le code}{5}{subsection.3.1}%
+\contentsline {section}{\numberline {4}Représenter une solution : les clés aléatoires}{7}{section.4}%
+\contentsline {section}{\numberline {5}Décoder une particule (\texttt {schedule.cpp})}{8}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Le décodeur semi-actif}{8}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Le décodeur Giffler-Thompson paramétré (par défaut)}{8}{subsection.5.2}%
+\contentsline {paragraph}{Vitesse.}{11}{section*.10}%
+\contentsline {section}{\numberline {6}L'essaim particulaire (\texttt {pso.cpp})}{12}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Le principe}{12}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Les réglages retenus}{13}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}La boucle principale}{15}{subsection.6.3}%
+\contentsline {section}{\numberline {7}Empêcher l'essaim de stagner}{15}{section.7}%
+\contentsline {subsection}{\numberline {7.1}La topologie en anneau}{15}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Le redémarrage partiel}{16}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}CLPSO : l'apprentissage global}{17}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}Le multi-essaims hétérogène}{19}{subsection.7.4}%
+\contentsline {section}{\numberline {8}Parallélisme et fiabilité}{20}{section.8}%
+\contentsline {paragraph}{Le format de sortie.}{22}{section*.14}%
+\contentsline {section}{\numberline {9}Résultats}{23}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Convergence sur l'instance des slides}{23}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Ce qu'apporte chaque mécanisme}{24}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Résultats par instance}{24}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Ce que nous avons appris}{24}{subsection.9.4}%
+\contentsline {section}{\numberline {10}Utilisation}{25}{section.10}%
+\contentsline {paragraph}{Compiler}{25}{section*.19}%
+\contentsline {paragraph}{Lancer une instance}{25}{section*.20}%
+\contentsline {paragraph}{Tests automatiques.}{25}{section*.22}%

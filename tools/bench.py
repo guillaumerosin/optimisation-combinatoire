@@ -13,7 +13,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("executable")
     parser.add_argument("directory")
-    parser.add_argument("--time", type=float, default=55.0)
+    parser.add_argument("--time", type=float, default=60.0)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--out", default="resultats")
     parser.add_argument("--csv", default="resultats/bench.csv")

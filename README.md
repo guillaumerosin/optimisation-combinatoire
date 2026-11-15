@@ -47,7 +47,7 @@ Le solveur est un PSO pur, sans recherche locale.
 
 | Option | Défaut | Rôle |
 |---|---|---|
-| `--time S` | 55 | budget en secondes (0 = sans limite) |
+| `--time S` | 60 | budget en secondes (0 = sans limite) |
 | `--threads N` | 0 | nombre d'essaims, 0 = un par cœur |
 | `--topology` | `mixed` | `ring`, `global`, `cl` (CLPSO) ou `mixed` (un essaim sur deux en `cl`) |
 | `--neighbors K` | 2 | voisins de chaque côté dans l'anneau |
@@ -83,7 +83,7 @@ Le budget est mesuré avec une horloge monotone.
 Lancer une série d'instances, valider chaque JSON et produire un CSV :
 
 ```sh
-python3 tools/bench.py build/jsp_pso instances/ --time 55 --out resultats
+python3 tools/bench.py build/jsp_pso instances/ --time 60 --out resultats
 ```
 
 Vérification mémoire sous Linux (AddressSanitizer / UBSan) :

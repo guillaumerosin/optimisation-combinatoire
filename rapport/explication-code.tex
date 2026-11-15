@@ -60,7 +60,9 @@
   breaklines=true,breakatwhitespace=true,
   postbreak=\mbox{\textcolor{gris}{$\hookrightarrow$}\space},
   aboveskip=8pt,belowskip=6pt,
-  captionpos=t,abovecaptionskip=3pt}
+  captionpos=t,abovecaptionskip=3pt,
+  literate={é}{{\'e}}1 {è}{{\`e}}1 {à}{{\`a}}1 {ê}{{\^e}}1 {ù}{{\`u}}1
+           {ô}{{\^o}}1 {î}{{\^i}}1 {ç}{{\c c}}1 {É}{{\'E}}1 {û}{{\^u}}1}
 % Extrait reel du code source : \code{fichier}{premiere}{derniere}{titre}
 % Les numeros affiches sont ceux du fichier (version du 19 octobre 2026).
 \newcommand{\code}[4]{%
@@ -891,8 +893,8 @@ du record global.}
   \item \textbf{Hasard reproductible par essaim.} Chaque thread a son propre générateur
         (\texttt{mt19937\_64}), initialisé à partir de \texttt{-{}-seed} et du numéro du thread.
   \item \textbf{Budget de temps.} Le temps est mesuré avec une horloge monotone
-        (\texttt{steady\_clock}), insensible aux changements d'heure du système : 55
-        secondes par défaut pour une limite d'une minute.
+        (\texttt{steady\_clock}), insensible aux changements d'heure du système : 60
+        secondes par défaut.
   \item \textbf{Rien n'est perdu.} Le meilleur planning est écrit dans le JSON au plus
         toutes les 2 secondes pendant la recherche, puis une dernière fois à la fin. Si le
         programme est interrompu, le dernier record est sur le disque.
@@ -1112,7 +1114,7 @@ python3 tools/validate.py instances/abz5 resultats/abz5.json
 \toprule
 \textrm{Option} & Défaut & Rôle\\
 \midrule
--{}-time S       & 55     & budget en secondes (0 = sans limite)\\
+-{}-time S       & 60     & budget en secondes (0 = sans limite)\\
 -{}-threads N    & 0      & nombre d'essaims, 0 = un par cœur\\
 -{}-topology     & mixed  & \texttt{ring}, \texttt{global}, \texttt{cl} (CLPSO) ou \texttt{mixed}\\
 -{}-neighbors K  & 2      & voisins de chaque côté dans l'anneau\\

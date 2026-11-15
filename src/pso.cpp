@@ -62,7 +62,8 @@ int evaluate(const Instance& instance, const std::vector<double>& keys,
     return makespan;
 }
 
-std::vector<double> keys_from_priority(const Instance& instance, int rule) {
+// Inutilisee tant que l'initialisation par regles est en commentaire.
+[[maybe_unused]] std::vector<double> keys_from_priority(const Instance& instance, int rule) {
     // Quelques particules partent de regles de priorite classiques
     // (0 : SPT, 1 : MWKR, 2 : MOPNR) pour donner a l'essaim des points de
     // depart structures.
@@ -227,15 +228,17 @@ Schedule solve(const Instance& instance, const SolverOptions& options) {
             Particle& particle = swarm[index];
             particle.position.resize(dimension);
             particle.velocity.resize(dimension);
+            // Initialisation aleatoire : chaque cle est tiree dans [0, 1[
+            // et chaque vitesse dans [-vmax, vmax].
             randomize(particle);
-            // Seul le premier essaim recoit les regles de priorite : les
-            // autres restent aleatoires pour diversifier les threads.
-            if (worker_id == 0 && index < 3) {
-                particle.position = keys_from_priority(instance, index);
-                particle.best_position = particle.position;
-                particle.best_makespan =
-                    evaluate(instance, particle.position, options);
-            }
+            // Desactive (en attente de l'avis du prof) : 3 particules du
+            // premier essaim partaient des regles SPT, MWKR et MOPNR.
+            // if (worker_id == 0 && index < 3) {
+            //     particle.position = keys_from_priority(instance, index);
+            //     particle.best_position = particle.position;
+            //     particle.best_makespan =
+            //         evaluate(instance, particle.position, options);
+            // }
             publish(particle.best_position, particle.best_makespan, worker_id);
         }
 

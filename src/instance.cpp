@@ -1,11 +1,11 @@
-#include "instance.hpp"
+#include "instance.hpp"  
+#include <fstream>  // Permet d'ouvrir et lire le fichier
+#include <iostream>  // Affichage à l'écran
+#include <sstream> // lire l-des nombres dans une ligne de texte
+#include <stdexcept>  // Déclencher des erreurs 
 #include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
 
-namespace {
+namespace {   //Private code 
 bool is_comment_or_empty(const std::string& line) {
     const auto first = line.find_first_not_of(" \t\r");
     return first == std::string::npos || line[first] == '#';

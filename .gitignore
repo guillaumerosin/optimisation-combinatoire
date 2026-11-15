@@ -1,0 +1,10 @@
+# Dossiers de compilation CMake
+build/
+build-*/
+
+# Fichiers auxiliaires LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
